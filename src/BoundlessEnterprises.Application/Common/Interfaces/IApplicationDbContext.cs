@@ -2,6 +2,7 @@ using BoundlessEnterprises.Domain.Companies;
 using BoundlessEnterprises.Domain.Employees;
 using BoundlessEnterprises.Domain.Identity;
 using BoundlessEnterprises.Domain.Onboarding;
+using BoundlessEnterprises.Domain.Payments;
 using Microsoft.EntityFrameworkCore;
 
 namespace BoundlessEnterprises.Application.Common.Interfaces;
@@ -22,6 +23,10 @@ public interface IApplicationDbContext
     DbSet<Employment> Employments { get; }
     DbSet<OnboardingTemplate> OnboardingTemplates { get; }
     DbSet<OnboardingProcess> OnboardingProcesses { get; }
+    DbSet<Customer> Customers { get; }
+    DbSet<Invoice> Invoices { get; }
+    DbSet<Payment> Payments { get; }
+    DbSet<Subscription> Subscriptions { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

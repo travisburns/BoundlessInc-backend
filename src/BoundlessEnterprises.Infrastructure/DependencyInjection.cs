@@ -2,6 +2,8 @@ using BoundlessEnterprises.Application.Common.Interfaces;
 using BoundlessEnterprises.Infrastructure.Common;
 using BoundlessEnterprises.Infrastructure.Email;
 using BoundlessEnterprises.Infrastructure.Identity;
+using BoundlessEnterprises.Infrastructure.Payments;
+using BoundlessEnterprises.Infrastructure.Payments.Stripe;
 using BoundlessEnterprises.Infrastructure.Persistence;
 using BoundlessEnterprises.Infrastructure.Persistence.Interceptors;
 using BoundlessEnterprises.Infrastructure.Persistence.Seed;
@@ -45,6 +47,21 @@ public static class DependencyInjection
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IEmailSender, LoggingEmailSender>();
+
+        // Payments: use real Stripe when a secret key is configured, else the
+        // stub gateway so the platform runs end-to-end without credentials.
+        services.Configure<StripeOptions>(configuration.GetSection(StripeOptions.SectionName));
+        var stripe = configuration.GetSection(StripeOptions.SectionName).Get<StripeOptions>();
+        if (stripe?.IsConfigured == true)
+        {
+            services.AddScoped<IPaymentGateway, StripePaymentGateway>();
+            services.AddScoped<IPaymentWebhookHandler, StripeWebhookHandler>();
+        }
+        else
+        {
+            services.AddScoped<IPaymentGateway, StubPaymentGateway>();
+            services.AddScoped<IPaymentWebhookHandler, StubPaymentWebhookHandler>();
+        }
 
         return services;
     }

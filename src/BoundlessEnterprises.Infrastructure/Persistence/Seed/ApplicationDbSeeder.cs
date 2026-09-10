@@ -2,6 +2,7 @@ using BoundlessEnterprises.Application.Common.Interfaces;
 using BoundlessEnterprises.Domain.Companies;
 using BoundlessEnterprises.Domain.Identity;
 using BoundlessEnterprises.Domain.Onboarding;
+using BoundlessEnterprises.Domain.Payments;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -34,6 +35,7 @@ public sealed class ApplicationDbSeeder
         await SeedRolesAndPermissionsAsync(cancellationToken);
         await SeedPlatformAdminAsync(cancellationToken);
         await SeedOnboardingTemplatesAsync(cancellationToken);
+        await SeedBillingAsync(cancellationToken);
     }
 
     private async Task SeedCompaniesAsync(CancellationToken cancellationToken)
@@ -237,5 +239,38 @@ public sealed class ApplicationDbSeeder
             await _db.SaveChangesAsync(cancellationToken);
             _logger.LogInformation("Seeded {Count} onboarding templates.", added);
         }
+    }
+
+    private async Task SeedBillingAsync(CancellationToken cancellationToken)
+    {
+        var firefin = await _db.Companies.FirstOrDefaultAsync(c => c.Code == "FIRE-001", cancellationToken);
+        if (firefin is null)
+            return;
+
+        if (await _db.Customers.AnyAsync(c => c.CompanyId == firefin.Id, cancellationToken))
+            return; // Already seeded.
+
+        var customer = Customer.Create(firefin.Id, "Harbor Table Group", "billing@harbortable.com");
+        _db.Customers.Add(customer);
+
+        var invoice1 = Invoice.Create(firefin.Id, customer.Id, "INV-1001");
+        invoice1.AddItem("Catering — corporate lunch (50 covers)", 50, 24.00m);
+        invoice1.AddItem("Delivery & service", 1, 150.00m);
+        invoice1.SetDueDate(DateTime.UtcNow.AddDays(14));
+        invoice1.Issue();
+        _db.Invoices.Add(invoice1);
+
+        var invoice2 = Invoice.Create(firefin.Id, customer.Id, "INV-1002");
+        invoice2.AddItem("Private dining event", 1, 1800.00m);
+        invoice2.SetDueDate(DateTime.UtcNow.AddDays(30));
+        invoice2.Issue();
+        _db.Invoices.Add(invoice2);
+
+        var subscription = Subscription.Create(firefin.Id, customer.Id,
+            "Firefin Provisions", "Professional", 200.00m, BillingInterval.Monthly);
+        _db.Subscriptions.Add(subscription);
+
+        await _db.SaveChangesAsync(cancellationToken);
+        _logger.LogInformation("Seeded billing sample data for Firefin.");
     }
 }
