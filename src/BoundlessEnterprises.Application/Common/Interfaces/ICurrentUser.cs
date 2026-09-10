@@ -10,6 +10,12 @@ public interface ICurrentUser
     string? Email { get; }
     bool IsAuthenticated { get; }
 
+    /// <summary>Platform-wide administrator (holding-company operator).</summary>
+    bool IsPlatformAdmin { get; }
+
     /// <summary>Company ids the caller is a member of.</summary>
     IReadOnlyCollection<Guid> CompanyIds { get; }
+
+    /// <summary>True when the caller may act within the given company.</summary>
+    bool CanAccessCompany(Guid companyId) => IsPlatformAdmin || CompanyIds.Contains(companyId);
 }

@@ -2,6 +2,7 @@ using System.Reflection;
 using BoundlessEnterprises.Application.Common.Interfaces;
 using BoundlessEnterprises.Domain.Common;
 using BoundlessEnterprises.Domain.Companies;
+using BoundlessEnterprises.Domain.Employees;
 using BoundlessEnterprises.Domain.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,6 +25,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<Permission> Permissions => Set<Permission>();
     public DbSet<UserCompany> UserCompanies => Set<UserCompany>();
+    public DbSet<Employee> Employees => Set<Employee>();
+    public DbSet<Employment> Employments => Set<Employment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -51,6 +51,10 @@ public sealed class ExceptionHandlingMiddleware
                 StatusCodes.Status401Unauthorized,
                 "Unauthorized.",
                 new ProblemDetails { Status = StatusCodes.Status401Unauthorized, Title = "Unauthorized." }),
+            ForbiddenAccessException fa => (
+                StatusCodes.Status403Forbidden,
+                fa.Message,
+                new ProblemDetails { Status = StatusCodes.Status403Forbidden, Title = fa.Message }),
             _ => (
                 StatusCodes.Status500InternalServerError,
                 "An unexpected error occurred.",

@@ -20,6 +20,9 @@ public sealed class CurrentUser : ICurrentUser
 
     public bool IsAuthenticated => Principal?.Identity?.IsAuthenticated ?? false;
 
+    public bool IsPlatformAdmin =>
+        string.Equals(Principal?.FindFirstValue("platform_admin"), "true", StringComparison.OrdinalIgnoreCase);
+
     public Guid? UserId
     {
         get
