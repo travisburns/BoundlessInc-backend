@@ -2,6 +2,7 @@ using System.Reflection;
 using BoundlessEnterprises.Application.Common.Interfaces;
 using BoundlessEnterprises.Domain.Common;
 using BoundlessEnterprises.Domain.Companies;
+using BoundlessEnterprises.Domain.Documents;
 using BoundlessEnterprises.Domain.Employees;
 using BoundlessEnterprises.Domain.Identity;
 using BoundlessEnterprises.Domain.Onboarding;
@@ -35,6 +36,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Invoice> Invoices => Set<Invoice>();
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<Subscription> Subscriptions => Set<Subscription>();
+    public DbSet<Document> Documents => Set<Document>();
+    public DbSet<DocumentAssignment> DocumentAssignments => Set<DocumentAssignment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

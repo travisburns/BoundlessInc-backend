@@ -1,4 +1,5 @@
 using BoundlessEnterprises.Domain.Companies;
+using BoundlessEnterprises.Domain.Documents;
 using BoundlessEnterprises.Domain.Employees;
 using BoundlessEnterprises.Domain.Identity;
 using BoundlessEnterprises.Domain.Onboarding;
@@ -27,6 +28,8 @@ public interface IApplicationDbContext
     DbSet<Invoice> Invoices { get; }
     DbSet<Payment> Payments { get; }
     DbSet<Subscription> Subscriptions { get; }
+    DbSet<Document> Documents { get; }
+    DbSet<DocumentAssignment> DocumentAssignments { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

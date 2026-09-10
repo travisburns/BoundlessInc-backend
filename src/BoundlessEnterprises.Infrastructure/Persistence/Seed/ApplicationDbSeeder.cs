@@ -1,5 +1,6 @@
 using BoundlessEnterprises.Application.Common.Interfaces;
 using BoundlessEnterprises.Domain.Companies;
+using BoundlessEnterprises.Domain.Documents;
 using BoundlessEnterprises.Domain.Identity;
 using BoundlessEnterprises.Domain.Onboarding;
 using BoundlessEnterprises.Domain.Payments;
@@ -36,6 +37,7 @@ public sealed class ApplicationDbSeeder
         await SeedPlatformAdminAsync(cancellationToken);
         await SeedOnboardingTemplatesAsync(cancellationToken);
         await SeedBillingAsync(cancellationToken);
+        await SeedDocumentsAsync(cancellationToken);
     }
 
     private async Task SeedCompaniesAsync(CancellationToken cancellationToken)
@@ -272,5 +274,26 @@ public sealed class ApplicationDbSeeder
 
         await _db.SaveChangesAsync(cancellationToken);
         _logger.LogInformation("Seeded billing sample data for Firefin.");
+    }
+
+    private async Task SeedDocumentsAsync(CancellationToken cancellationToken)
+    {
+        var firefin = await _db.Companies.FirstOrDefaultAsync(c => c.Code == "FIRE-001", cancellationToken);
+        if (firefin is null)
+            return;
+
+        if (await _db.Documents.AnyAsync(d => d.CompanyId == firefin.Id, cancellationToken))
+            return;
+
+        _db.Documents.AddRange(
+            Document.Create(firefin.Id, "Firefin Employee Handbook", DocumentType.Policy,
+                "Company policies, conduct, and expectations."),
+            Document.Create(firefin.Id, "Food Safety & Hygiene Policy", DocumentType.Policy,
+                "Kitchen safety, hygiene, and handling standards."),
+            Document.Create(firefin.Id, "Confidentiality Agreement", DocumentType.Agreement,
+                "Standard confidentiality and IP agreement."));
+
+        await _db.SaveChangesAsync(cancellationToken);
+        _logger.LogInformation("Seeded document library for Firefin.");
     }
 }
