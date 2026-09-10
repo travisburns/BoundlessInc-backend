@@ -4,6 +4,7 @@ using BoundlessEnterprises.Domain.Common;
 using BoundlessEnterprises.Domain.Companies;
 using BoundlessEnterprises.Domain.Employees;
 using BoundlessEnterprises.Domain.Identity;
+using BoundlessEnterprises.Domain.Onboarding;
 using Microsoft.EntityFrameworkCore;
 
 namespace BoundlessEnterprises.Infrastructure.Persistence;
@@ -27,6 +28,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<UserCompany> UserCompanies => Set<UserCompany>();
     public DbSet<Employee> Employees => Set<Employee>();
     public DbSet<Employment> Employments => Set<Employment>();
+    public DbSet<OnboardingTemplate> OnboardingTemplates => Set<OnboardingTemplate>();
+    public DbSet<OnboardingProcess> OnboardingProcesses => Set<OnboardingProcess>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

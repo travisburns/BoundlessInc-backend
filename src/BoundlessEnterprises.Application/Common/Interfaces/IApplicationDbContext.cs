@@ -1,6 +1,7 @@
 using BoundlessEnterprises.Domain.Companies;
 using BoundlessEnterprises.Domain.Employees;
 using BoundlessEnterprises.Domain.Identity;
+using BoundlessEnterprises.Domain.Onboarding;
 using Microsoft.EntityFrameworkCore;
 
 namespace BoundlessEnterprises.Application.Common.Interfaces;
@@ -19,6 +20,8 @@ public interface IApplicationDbContext
     DbSet<UserCompany> UserCompanies { get; }
     DbSet<Employee> Employees { get; }
     DbSet<Employment> Employments { get; }
+    DbSet<OnboardingTemplate> OnboardingTemplates { get; }
+    DbSet<OnboardingProcess> OnboardingProcesses { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

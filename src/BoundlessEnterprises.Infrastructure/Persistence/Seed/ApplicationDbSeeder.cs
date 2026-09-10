@@ -1,6 +1,7 @@
 using BoundlessEnterprises.Application.Common.Interfaces;
 using BoundlessEnterprises.Domain.Companies;
 using BoundlessEnterprises.Domain.Identity;
+using BoundlessEnterprises.Domain.Onboarding;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -32,6 +33,7 @@ public sealed class ApplicationDbSeeder
         await SeedCompaniesAsync(cancellationToken);
         await SeedRolesAndPermissionsAsync(cancellationToken);
         await SeedPlatformAdminAsync(cancellationToken);
+        await SeedOnboardingTemplatesAsync(cancellationToken);
     }
 
     private async Task SeedCompaniesAsync(CancellationToken cancellationToken)
@@ -180,5 +182,60 @@ public sealed class ApplicationDbSeeder
         _db.Users.Add(admin);
         await _db.SaveChangesAsync(cancellationToken);
         _logger.LogInformation("Seeded platform admin {Email} (default password ChangeMe!123).", adminEmail);
+    }
+
+    private async Task SeedOnboardingTemplatesAsync(CancellationToken cancellationToken)
+    {
+        var companiesByCode = await _db.Companies
+            .Where(c => c.Code == "FIRE-001" || c.Code == "BND-001")
+            .ToDictionaryAsync(c => c.Code, c => c.Id, cancellationToken);
+
+        var existingNames = await _db.OnboardingTemplates
+            .Select(t => t.Name)
+            .ToListAsync(cancellationToken);
+
+        var added = 0;
+
+        if (companiesByCode.TryGetValue("FIRE-001", out var firefinId) &&
+            !existingNames.Contains("Firefin — Kitchen Employee"))
+        {
+            var t = OnboardingTemplate.Create(firefinId, "Firefin — Kitchen Employee",
+                "Onboarding for Firefin kitchen and hospitality staff.");
+            foreach (var name in new[]
+            {
+                "Personal information", "Employment documents", "Tax / payroll information",
+                "Emergency contact", "Policies", "Food safety training",
+                "Firefin orientation", "Equipment / access", "Manager approval",
+            })
+            {
+                t.AddStep(name);
+            }
+            _db.OnboardingTemplates.Add(t);
+            added++;
+        }
+
+        if (companiesByCode.TryGetValue("BND-001", out var boundlessId) &&
+            !existingNames.Contains("Boundless — Creative Employee"))
+        {
+            var t = OnboardingTemplate.Create(boundlessId, "Boundless — Creative Employee",
+                "Onboarding for Boundless creative and worldbuilding staff.");
+            foreach (var name in new[]
+            {
+                "Personal information", "NDA / IP agreement", "Core onboarding",
+                "Soul Skill", "Ring assignment", "Mask / Veil / Quill",
+                "Project access", "Software accounts", "First Horizon",
+            })
+            {
+                t.AddStep(name);
+            }
+            _db.OnboardingTemplates.Add(t);
+            added++;
+        }
+
+        if (added > 0)
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+            _logger.LogInformation("Seeded {Count} onboarding templates.", added);
+        }
     }
 }
