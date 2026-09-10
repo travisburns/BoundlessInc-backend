@@ -1,4 +1,5 @@
 using BoundlessEnterprises.Application.Companies.Queries.GetCompanies;
+using BoundlessEnterprises.Application.Companies.Queries.GetCompanyBySlug;
 using MediatR;
 
 namespace BoundlessEnterprises.Api.Endpoints.Companies;
@@ -17,5 +18,10 @@ public sealed class CompaniesEndpoints : IEndpointModule
             Results.Ok(await sender.Send(new GetCompaniesQuery(PublicOnly: true), ct)))
             .WithName("GetPublicCompanies")
             .WithSummary("List publicly visible companies in the portfolio.");
+
+        group.MapGet("/{slug}", async (string slug, ISender sender, CancellationToken ct) =>
+            Results.Ok(await sender.Send(new GetCompanyBySlugQuery(slug), ct)))
+            .WithName("GetCompanyBySlug")
+            .WithSummary("Get a single publicly visible company by its slug.");
     }
 }
