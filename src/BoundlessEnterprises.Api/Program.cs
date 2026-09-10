@@ -27,9 +27,7 @@ builder.Services.AddCors(options =>
         .AllowCredentials());
 });
 
-// Authentication schemes (JWT bearer) are configured in Phase 1; registering the
-// core services here satisfies the auto-added auth middleware.
-builder.Services.AddAuthentication();
+builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddAuthorization();
 
 builder.Services.AddEndpointsApiExplorer();
@@ -49,6 +47,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors(CorsPolicy);
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapHealthChecks("/health");

@@ -1,5 +1,7 @@
 using BoundlessEnterprises.Application.Common.Interfaces;
 using BoundlessEnterprises.Infrastructure.Common;
+using BoundlessEnterprises.Infrastructure.Email;
+using BoundlessEnterprises.Infrastructure.Identity;
 using BoundlessEnterprises.Infrastructure.Persistence;
 using BoundlessEnterprises.Infrastructure.Persistence.Interceptors;
 using BoundlessEnterprises.Infrastructure.Persistence.Seed;
@@ -37,6 +39,12 @@ public static class DependencyInjection
             sp.GetRequiredService<ApplicationDbContext>());
 
         services.AddScoped<ApplicationDbSeeder>();
+
+        // Identity & auth
+        services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
+        services.AddSingleton<IPasswordHasher, PasswordHasher>();
+        services.AddSingleton<IJwtTokenService, JwtTokenService>();
+        services.AddScoped<IEmailSender, LoggingEmailSender>();
 
         return services;
     }

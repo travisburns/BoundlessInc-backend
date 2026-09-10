@@ -1,28 +1,37 @@
+using BoundlessEnterprises.Application.Common.Interfaces;
 using BoundlessEnterprises.Domain.Companies;
+using BoundlessEnterprises.Domain.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace BoundlessEnterprises.Infrastructure.Persistence.Seed;
 
 /// <summary>
-/// Seeds the baseline portfolio: the holding company plus the founding
-/// subsidiaries described in the platform architecture. Idempotent — only
-/// inserts companies whose code is not already present.
+/// Seeds baseline data: the portfolio (holding company + subsidiaries), the
+/// system roles and permissions, and a platform administrator account. Every
+/// step is idempotent so it can run safely on each startup.
 /// </summary>
 public sealed class ApplicationDbSeeder
 {
     private readonly ApplicationDbContext _db;
+    private readonly IPasswordHasher _passwordHasher;
     private readonly ILogger<ApplicationDbSeeder> _logger;
 
-    public ApplicationDbSeeder(ApplicationDbContext db, ILogger<ApplicationDbSeeder> logger)
+    public ApplicationDbSeeder(
+        ApplicationDbContext db,
+        IPasswordHasher passwordHasher,
+        ILogger<ApplicationDbSeeder> logger)
     {
         _db = db;
+        _passwordHasher = passwordHasher;
         _logger = logger;
     }
 
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
         await SeedCompaniesAsync(cancellationToken);
+        await SeedRolesAndPermissionsAsync(cancellationToken);
+        await SeedPlatformAdminAsync(cancellationToken);
     }
 
     private async Task SeedCompaniesAsync(CancellationToken cancellationToken)
@@ -80,5 +89,96 @@ public sealed class ApplicationDbSeeder
         company.ConfigureCapabilities(employeeLogin, payments, order);
         company.Activate();
         return company;
+    }
+
+    private static readonly string[] Modules =
+    {
+        "companies", "employees", "onboarding", "payments",
+        "documents", "integrations", "intelligence", "identity",
+    };
+
+    private async Task SeedRolesAndPermissionsAsync(CancellationToken cancellationToken)
+    {
+        // Permissions: <module>.read and <module>.write for each capability.
+        var existingPermissionNames = await _db.Permissions
+            .Select(p => p.Name)
+            .ToListAsync(cancellationToken);
+
+        var newPermissions = new List<Permission>();
+        foreach (var module in Modules)
+        {
+            foreach (var action in new[] { "read", "write" })
+            {
+                var name = $"{module}.{action}";
+                if (!existingPermissionNames.Contains(name))
+                    newPermissions.Add(Permission.Create(name, module, $"Can {action} {module}."));
+            }
+        }
+
+        if (newPermissions.Count > 0)
+        {
+            _db.Permissions.AddRange(newPermissions);
+            await _db.SaveChangesAsync(cancellationToken);
+            _logger.LogInformation("Seeded {Count} permissions.", newPermissions.Count);
+        }
+
+        var allPermissions = await _db.Permissions.ToListAsync(cancellationToken);
+
+        var existingRoleNames = await _db.Roles
+            .Select(r => r.NormalizedName)
+            .ToListAsync(cancellationToken);
+
+        foreach (var roleName in RoleNames.All)
+        {
+            if (existingRoleNames.Contains(roleName.ToUpperInvariant()))
+                continue;
+
+            var role = Role.Create(roleName, RoleNames.Descriptions[roleName], isSystem: true);
+
+            // Owner gets every permission; other roles get read across modules.
+            var grants = roleName == RoleNames.Owner
+                ? allPermissions
+                : allPermissions.Where(p => p.Name.EndsWith(".read", StringComparison.Ordinal));
+
+            foreach (var permission in grants)
+                role.AssignPermission(permission.Id);
+
+            _db.Roles.Add(role);
+        }
+
+        await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task SeedPlatformAdminAsync(CancellationToken cancellationToken)
+    {
+        const string adminEmail = "admin@boundless.enterprises";
+
+        if (await _db.Users.AnyAsync(u => u.Email == adminEmail, cancellationToken))
+        {
+            _logger.LogInformation("Admin seed skipped; platform admin already present.");
+            return;
+        }
+
+        var admin = User.Create(
+            adminEmail,
+            _passwordHasher.Hash("ChangeMe!123"),
+            "Platform",
+            "Administrator");
+        admin.GrantPlatformAdmin();
+
+        var holding = await _db.Companies.FirstOrDefaultAsync(c => c.Code == "BE-000", cancellationToken);
+        var ownerRole = await _db.Roles
+            .FirstOrDefaultAsync(r => r.NormalizedName == RoleNames.Owner.ToUpperInvariant(), cancellationToken);
+
+        if (holding is not null)
+        {
+            var membership = admin.AddMembership(holding.Id, isPrimary: true);
+            if (ownerRole is not null)
+                membership.AssignRole(ownerRole.Id);
+        }
+
+        _db.Users.Add(admin);
+        await _db.SaveChangesAsync(cancellationToken);
+        _logger.LogInformation("Seeded platform admin {Email} (default password ChangeMe!123).", adminEmail);
     }
 }

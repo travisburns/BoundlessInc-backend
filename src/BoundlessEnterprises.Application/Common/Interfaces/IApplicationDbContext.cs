@@ -1,4 +1,5 @@
 using BoundlessEnterprises.Domain.Companies;
+using BoundlessEnterprises.Domain.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace BoundlessEnterprises.Application.Common.Interfaces;
@@ -11,6 +12,10 @@ namespace BoundlessEnterprises.Application.Common.Interfaces;
 public interface IApplicationDbContext
 {
     DbSet<Company> Companies { get; }
+    DbSet<User> Users { get; }
+    DbSet<Role> Roles { get; }
+    DbSet<Permission> Permissions { get; }
+    DbSet<UserCompany> UserCompanies { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
