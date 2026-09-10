@@ -1,7 +1,10 @@
 using BoundlessEnterprises.Application.Common.Interfaces;
+using BoundlessEnterprises.Application.Integrations.Services;
 using BoundlessEnterprises.Domain.Companies;
 using BoundlessEnterprises.Domain.Documents;
 using BoundlessEnterprises.Domain.Identity;
+using BoundlessEnterprises.Domain.Integrations;
+using BoundlessEnterprises.Domain.Intelligence;
 using BoundlessEnterprises.Domain.Onboarding;
 using BoundlessEnterprises.Domain.Payments;
 using Microsoft.EntityFrameworkCore;
@@ -38,6 +41,7 @@ public sealed class ApplicationDbSeeder
         await SeedOnboardingTemplatesAsync(cancellationToken);
         await SeedBillingAsync(cancellationToken);
         await SeedDocumentsAsync(cancellationToken);
+        await SeedIntelligenceAsync(cancellationToken);
     }
 
     private async Task SeedCompaniesAsync(CancellationToken cancellationToken)
@@ -295,5 +299,62 @@ public sealed class ApplicationDbSeeder
 
         await _db.SaveChangesAsync(cancellationToken);
         _logger.LogInformation("Seeded document library for Firefin.");
+    }
+
+    private async Task SeedIntelligenceAsync(CancellationToken cancellationToken)
+    {
+        if (await _db.BusinessEvents.AnyAsync(cancellationToken))
+            return; // Already seeded.
+
+        // Each operating company connects an integration and pushes normalized
+        // events. Revenue profiles differ so the executive view has contrast.
+        var profiles = new (string Code, string App, string EventType, decimal Min, decimal Max, int PerDay)[]
+        {
+            ("FIRE-001", "Firefin POS", "OrderCompleted", 40m, 120m, 6),
+            ("SKAF-001", "SkaffaldOS", "SubscriptionCharged", 150m, 400m, 2),
+            ("BND-001", "Boundless Studio", "LicenseSold", 200m, 900m, 1),
+            ("DHW-001", "DigitalHeavyWeights", "ContractMilestone", 500m, 2500m, 1),
+        };
+
+        var codes = profiles.Select(p => p.Code).ToArray();
+        var companies = await _db.Companies
+            .Where(c => codes.Contains(c.Code))
+            .ToDictionaryAsync(c => c.Code, c => c.Id, cancellationToken);
+
+        var random = new Random(20260910);
+        var today = DateTime.UtcNow.Date;
+        var events = new List<BusinessEvent>();
+        var addedIntegrations = 0;
+
+        foreach (var profile in profiles)
+        {
+            if (!companies.TryGetValue(profile.Code, out var companyId))
+                continue;
+
+            var (_, hash, prefix) = ApiKeys.Generate();
+            var integration = Integration.Create(companyId, profile.App, hash, prefix);
+            _db.Integrations.Add(integration);
+            addedIntegrations++;
+
+            for (var dayOffset = 13; dayOffset >= 0; dayOffset--)
+            {
+                var day = today.AddDays(-dayOffset);
+                for (var n = 0; n < profile.PerDay; n++)
+                {
+                    var revenue = Math.Round(
+                        (decimal)((double)profile.Min + random.NextDouble() * (double)(profile.Max - profile.Min)), 2);
+                    var occurred = day.AddHours(random.Next(8, 22)).AddMinutes(random.Next(0, 60));
+                    var evt = BusinessEvent.Create(companyId, integration.Id, profile.EventType,
+                        revenue, "USD", occurred, $"seed-{profile.Code}-{dayOffset}-{n}");
+                    events.Add(evt);
+                    integration.RecordEvent(occurred);
+                }
+            }
+        }
+
+        _db.BusinessEvents.AddRange(events);
+        await _db.SaveChangesAsync(cancellationToken);
+        _logger.LogInformation("Seeded {Integrations} integrations and {Events} business events.",
+            addedIntegrations, events.Count);
     }
 }

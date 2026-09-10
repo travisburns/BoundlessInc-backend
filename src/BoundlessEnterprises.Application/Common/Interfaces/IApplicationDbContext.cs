@@ -2,6 +2,8 @@ using BoundlessEnterprises.Domain.Companies;
 using BoundlessEnterprises.Domain.Documents;
 using BoundlessEnterprises.Domain.Employees;
 using BoundlessEnterprises.Domain.Identity;
+using BoundlessEnterprises.Domain.Integrations;
+using BoundlessEnterprises.Domain.Intelligence;
 using BoundlessEnterprises.Domain.Onboarding;
 using BoundlessEnterprises.Domain.Payments;
 using Microsoft.EntityFrameworkCore;
@@ -30,6 +32,9 @@ public interface IApplicationDbContext
     DbSet<Subscription> Subscriptions { get; }
     DbSet<Document> Documents { get; }
     DbSet<DocumentAssignment> DocumentAssignments { get; }
+    DbSet<Integration> Integrations { get; }
+    DbSet<BusinessEvent> BusinessEvents { get; }
+    DbSet<DailySnapshot> DailySnapshots { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

@@ -5,6 +5,8 @@ using BoundlessEnterprises.Domain.Companies;
 using BoundlessEnterprises.Domain.Documents;
 using BoundlessEnterprises.Domain.Employees;
 using BoundlessEnterprises.Domain.Identity;
+using BoundlessEnterprises.Domain.Integrations;
+using BoundlessEnterprises.Domain.Intelligence;
 using BoundlessEnterprises.Domain.Onboarding;
 using BoundlessEnterprises.Domain.Payments;
 using Microsoft.EntityFrameworkCore;
@@ -38,6 +40,9 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Subscription> Subscriptions => Set<Subscription>();
     public DbSet<Document> Documents => Set<Document>();
     public DbSet<DocumentAssignment> DocumentAssignments => Set<DocumentAssignment>();
+    public DbSet<Integration> Integrations => Set<Integration>();
+    public DbSet<BusinessEvent> BusinessEvents => Set<BusinessEvent>();
+    public DbSet<DailySnapshot> DailySnapshots => Set<DailySnapshot>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
