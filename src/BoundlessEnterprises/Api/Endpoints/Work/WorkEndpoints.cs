@@ -10,6 +10,7 @@ using BoundlessEnterprises.Application.Work.Commands.SetAssignmentStatus;
 using BoundlessEnterprises.Application.Work.Commands.SetRingHolder;
 using BoundlessEnterprises.Application.Work.Commands.UpdateAssignment;
 using BoundlessEnterprises.Application.Work.Commands.UpdateRing;
+using BoundlessEnterprises.Application.Work.Queries.GetOrgOverview;
 using BoundlessEnterprises.Application.Work.Queries.GetRingFile;
 using BoundlessEnterprises.Application.Work.Queries.GetRingFiles;
 using BoundlessEnterprises.Application.Work.Queries.GetRingHolderInvite;
@@ -133,6 +134,11 @@ public sealed class WorkEndpoints : IEndpointModule
         })
             .DisableAntiforgery()
             .WithName("UploadRingFile").WithSummary("Upload a file to a ring (optionally tied to an assignment).");
+
+        app.MapGet("/api/org/overview", async (ISender sender, CancellationToken ct) =>
+            Results.Ok(await sender.Send(new GetOrgOverviewQuery(), ct)))
+            .RequireAuthorization().WithTags("Work — Rings").WithName("GetOrgOverview")
+            .WithSummary("Organization-wide overview for the Crown.");
 
         var files = app.MapGroup("/api/ring-files").WithTags("Work — Files").RequireAuthorization();
 
