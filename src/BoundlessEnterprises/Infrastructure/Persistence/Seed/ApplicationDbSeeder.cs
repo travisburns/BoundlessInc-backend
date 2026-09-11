@@ -8,9 +8,11 @@ using BoundlessEnterprises.Domain.Integrations;
 using BoundlessEnterprises.Domain.Intelligence;
 using BoundlessEnterprises.Domain.Onboarding;
 using BoundlessEnterprises.Domain.Payments;
+using BoundlessEnterprises.Domain.Work;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using K = BoundlessEnterprises.Domain.Onboarding.OnboardingStepKind;
+using WorkStatus = BoundlessEnterprises.Domain.Work.AssignmentStatus;
 
 namespace BoundlessEnterprises.Infrastructure.Persistence.Seed;
 
@@ -46,6 +48,121 @@ public sealed class ApplicationDbSeeder
         await SeedBillingAsync(cancellationToken);
         await SeedDocumentsAsync(cancellationToken);
         await SeedIntelligenceAsync(cancellationToken);
+        await SeedRingsAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Seeds "The Resonance" ring (Aaron, head of audio) with its dashboard copy,
+    /// a login for the holder, and the sample assignments from the design.
+    /// </summary>
+    private async Task SeedRingsAsync(CancellationToken cancellationToken)
+    {
+        if (await _db.Rings.AnyAsync(r => r.Domain == RingDomain.Resonance, cancellationToken))
+            return;
+
+        // Holder login.
+        const string holderEmail = "aaron@boundless.enterprises";
+        var aaron = await _db.Users.FirstOrDefaultAsync(u => u.Email == holderEmail, cancellationToken);
+        if (aaron is null)
+        {
+            aaron = User.Create(holderEmail, _passwordHasher.Hash("ChangeMe!123"), "Aaron", "Cole");
+            var holding = await _db.Companies.FirstOrDefaultAsync(c => c.Code == "BE-000", cancellationToken);
+            var employeeRole = await _db.Roles
+                .FirstOrDefaultAsync(r => r.NormalizedName == RoleNames.Employee.ToUpperInvariant(), cancellationToken);
+            if (holding is not null)
+            {
+                var membership = aaron.AddMembership(holding.Id, isPrimary: true);
+                if (employeeRole is not null) membership.AssignRole(employeeRole.Id);
+            }
+            _db.Users.Add(aaron);
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+
+        // The Resonance ring.
+        var ring = Ring.Create(RingDomain.Resonance, "The Resonance", "RES", "Aaron");
+        ring.UpdateProfile(
+            "The Resonance",
+            "Music · Audio · Sound Design · Emotion",
+            "Aaron",
+            heroTitle: "Create Worlds Through Sound",
+            heroSubtitle: "Same notes. Greater realms.",
+            focus: "Music is the bridge between emotion and reality.",
+            motto: "Sound gives worlds a soul.",
+            accentColor: "#C2410C",
+            heroImageUrl: null);
+        ring.SetHolderUser(aaron.Id);
+        ring.SetResources(new[]
+        {
+            new RingResource { Label = "Audio Library", Sublabel = "Samples & Instruments", Href = "#" },
+            new RingResource { Label = "Style Guide", Sublabel = "Musical Direction", Href = "#" },
+            new RingResource { Label = "World References", Sublabel = "Regions & Cultures", Href = "#" },
+            new RingResource { Label = "Tools & Software", Sublabel = "Approved Tools", Href = "#" },
+        });
+        _db.Rings.Add(ring);
+        await _db.SaveChangesAsync(cancellationToken);
+
+        // Sample assignments (from the design).
+        var now = DateTime.UtcNow;
+        DateOnly Due(int day) => new(2026, 10, day);
+
+        Assignment Build(string code, string title, string summary, AssignmentType type,
+            AssignmentPriority priority, WorkStatus status, int progress, int dueDay,
+            string? objective = null, string? deliverable = null, string[]? criteria = null,
+            string? nextStep = null, string? domainDataJson = null)
+        {
+            var a = Assignment.ForSeed(ring.Id, code, title, type, priority, now);
+            a.UpdateCore(title, summary, objective, type, priority,
+                assigneeName: "Aaron", issuedBy: "The Crown", companyId: null,
+                startDate: null, dueDate: Due(dueDay), deliverable: deliverable,
+                acceptanceCriteria: criteria ?? Array.Empty<string>(), dependencies: null, blockers: null,
+                nextStep: nextStep, reviewRequired: status == WorkStatus.Review,
+                references: Array.Empty<string>(), tags: Array.Empty<string>(), domainDataJson: domainDataJson);
+            a.SeedState(status, progress, status == WorkStatus.Complete ? now : null);
+            return a;
+        }
+
+        var res0042 = Build("RES-0042", "Establish the Sound of Avarra", "Primary theme and musical language",
+            AssignmentType.Create, AssignmentPriority.High, WorkStatus.InProgress, 45, 16,
+            objective: "Establish the first recognizable sonic identity for the Avarra region.",
+            deliverable: "A 2–4 minute primary musical theme accompanied by a short written explanation of the musical language being established.",
+            criteria: new[]
+            {
+                "Establishes a recognizable Avarran identity",
+                "Fits established world / canon",
+                "Can serve as the foundation for later variations",
+                "Production quality sufficient for internal review",
+                "Source project / files submitted",
+            },
+            nextStep: "Draft main theme motif",
+            domainDataJson: "{\"audioType\":\"MUSIC\",\"region\":\"Avarra\",\"durationTarget\":\"2-4 minutes\",\"mood\":[\"ancient\",\"melancholic\",\"triumphant\"],\"format\":[\"WAV\",\"project-source\"]}");
+        res0042.AddUpdate("Aaron", "Started sketching the core motif — leaning into low strings and a distant choir.", now.AddHours(-4));
+        res0042.AddUpdate("Aaron", "Uploaded a first reference sketch for feedback.", now.AddHours(-2));
+
+        var seeded = new[]
+        {
+            res0042,
+            Build("RES-0039", "Sound Library Expansion", "New instruments and ambient textures",
+                AssignmentType.Build, AssignmentPriority.Normal, WorkStatus.InProgress, 30, 12),
+            Build("RES-0038", "Review Battle Theme v2", "Internal review and feedback",
+                AssignmentType.Review, AssignmentPriority.Normal, WorkStatus.Review, 80, 8),
+            Build("RES-0031", "Regional Themes — Valethra", "Exploration and concept drafts",
+                AssignmentType.Create, AssignmentPriority.Normal, WorkStatus.InProgress, 20, 18),
+            Build("RES-0028", "Final Mix — Prologue Cinematic", "Master and deliver final audio",
+                AssignmentType.Deliver, AssignmentPriority.Critical, WorkStatus.InProgress, 60, 6),
+            Build("RES-0041", "Character Themes — Main Cast", "Leitmotifs for Elias, Anna, Chaim",
+                AssignmentType.Create, AssignmentPriority.High, WorkStatus.Assigned, 0, 20),
+        };
+        _db.Assignments.AddRange(seeded);
+
+        // A couple of completed items so the "Completed" view isn't empty.
+        _db.Assignments.Add(Build("RES-0018", "Main Menu Theme", "Loop and stinger",
+            AssignmentType.Create, AssignmentPriority.Normal, WorkStatus.Complete, 100, 1));
+        _db.Assignments.Add(Build("RES-0022", "Ambient Bed — Forest of Hollows", "Loopable ambience",
+            AssignmentType.Create, AssignmentPriority.Low, WorkStatus.Complete, 100, 2));
+
+        ring.SetNextSequence(43);
+        await _db.SaveChangesAsync(cancellationToken);
+        _logger.LogInformation("Seeded The Resonance ring (holder {Email}) with sample assignments.", holderEmail);
     }
 
     private async Task SeedCompaniesAsync(CancellationToken cancellationToken)

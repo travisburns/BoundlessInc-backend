@@ -6,6 +6,7 @@ using BoundlessEnterprises.Domain.Integrations;
 using BoundlessEnterprises.Domain.Intelligence;
 using BoundlessEnterprises.Domain.Onboarding;
 using BoundlessEnterprises.Domain.Payments;
+using BoundlessEnterprises.Domain.Work;
 using Microsoft.EntityFrameworkCore;
 
 namespace BoundlessEnterprises.Application.Common.Interfaces;
@@ -37,6 +38,9 @@ public interface IApplicationDbContext
     DbSet<Integration> Integrations { get; }
     DbSet<BusinessEvent> BusinessEvents { get; }
     DbSet<DailySnapshot> DailySnapshots { get; }
+    DbSet<Ring> Rings { get; }
+    DbSet<Assignment> Assignments { get; }
+    DbSet<AssignmentUpdate> AssignmentUpdates { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

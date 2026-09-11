@@ -9,6 +9,7 @@ using BoundlessEnterprises.Domain.Integrations;
 using BoundlessEnterprises.Domain.Intelligence;
 using BoundlessEnterprises.Domain.Onboarding;
 using BoundlessEnterprises.Domain.Payments;
+using BoundlessEnterprises.Domain.Work;
 using Microsoft.EntityFrameworkCore;
 
 namespace BoundlessEnterprises.Infrastructure.Persistence;
@@ -45,6 +46,9 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Integration> Integrations => Set<Integration>();
     public DbSet<BusinessEvent> BusinessEvents => Set<BusinessEvent>();
     public DbSet<DailySnapshot> DailySnapshots => Set<DailySnapshot>();
+    public DbSet<Ring> Rings => Set<Ring>();
+    public DbSet<Assignment> Assignments => Set<Assignment>();
+    public DbSet<AssignmentUpdate> AssignmentUpdates => Set<AssignmentUpdate>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
