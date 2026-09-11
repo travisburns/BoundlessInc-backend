@@ -3,6 +3,7 @@ using BoundlessEnterprises.Application.Work.Commands.AcceptRingHolderInvite;
 using BoundlessEnterprises.Application.Work.Commands.AddAssignmentUpdate;
 using BoundlessEnterprises.Application.Work.Commands.CreateAssignment;
 using BoundlessEnterprises.Application.Work.Commands.CreateRing;
+using BoundlessEnterprises.Application.Work.Commands.CreateRingEvent;
 using BoundlessEnterprises.Application.Work.Commands.CreateRingHolderInvitation;
 using BoundlessEnterprises.Application.Work.Commands.DeleteRingFile;
 using BoundlessEnterprises.Application.Work.Commands.RegisterRingFile;
@@ -45,6 +46,7 @@ public sealed class WorkEndpoints : IEndpointModule
     public record HolderInviteBody(string FirstName, string LastName, string Email, int? ExpiresInDays);
     public record SetHolderBody(string? Email, bool? Clear);
     public record AcceptHolderBody(string Password, string? FirstName, string? LastName);
+    public record EventBody(string Title, DateOnly Date, string? TimeLabel, string? Detail);
 
     public void MapEndpoints(IEndpointRouteBuilder app)
     {
@@ -105,6 +107,10 @@ public sealed class WorkEndpoints : IEndpointModule
         rings.MapGet("/{ringId:guid}/events", async (Guid ringId, ISender sender, CancellationToken ct) =>
             Results.Ok(await sender.Send(new GetRingEventsQuery(ringId), ct)))
             .WithName("GetRingEvents").WithSummary("A ring's calendar entries.");
+
+        rings.MapPost("/{ringId:guid}/events", async (Guid ringId, EventBody b, ISender sender, CancellationToken ct) =>
+            Results.Ok(await sender.Send(new CreateRingEventCommand(ringId, b.Title, b.Date, b.TimeLabel, b.Detail), ct)))
+            .WithName("CreateRingEvent").WithSummary("Add a calendar entry to a ring.");
 
         rings.MapGet("/{ringId:guid}/activity", async (Guid ringId, ISender sender, CancellationToken ct) =>
             Results.Ok(await sender.Send(new GetRingActivityQuery(ringId), ct)))
