@@ -27,6 +27,7 @@ public interface IApplicationDbContext
     DbSet<OnboardingTemplate> OnboardingTemplates { get; }
     DbSet<OnboardingProcess> OnboardingProcesses { get; }
     DbSet<OnboardingInvitation> OnboardingInvitations { get; }
+    DbSet<OnboardingRequest> OnboardingRequests { get; }
     DbSet<Customer> Customers { get; }
     DbSet<Invoice> Invoices { get; }
     DbSet<Payment> Payments { get; }
