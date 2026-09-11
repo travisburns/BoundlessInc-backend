@@ -41,6 +41,8 @@ public interface IApplicationDbContext
     DbSet<Ring> Rings { get; }
     DbSet<Assignment> Assignments { get; }
     DbSet<AssignmentUpdate> AssignmentUpdates { get; }
+    DbSet<RingEvent> RingEvents { get; }
+    DbSet<RingActivity> RingActivities { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

@@ -49,6 +49,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Ring> Rings => Set<Ring>();
     public DbSet<Assignment> Assignments => Set<Assignment>();
     public DbSet<AssignmentUpdate> AssignmentUpdates => Set<AssignmentUpdate>();
+    public DbSet<RingEvent> RingEvents => Set<RingEvent>();
+    public DbSet<RingActivity> RingActivities => Set<RingActivity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

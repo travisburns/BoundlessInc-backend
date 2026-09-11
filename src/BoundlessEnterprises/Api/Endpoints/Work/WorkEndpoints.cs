@@ -7,7 +7,9 @@ using BoundlessEnterprises.Application.Work.Commands.UpdateRing;
 using BoundlessEnterprises.Application.Work.Queries.GetAssignment;
 using BoundlessEnterprises.Application.Work.Queries.GetAssignments;
 using BoundlessEnterprises.Application.Work.Queries.GetMyRing;
+using BoundlessEnterprises.Application.Work.Queries.GetRingActivity;
 using BoundlessEnterprises.Application.Work.Queries.GetRingByDomain;
+using BoundlessEnterprises.Application.Work.Queries.GetRingEvents;
 using BoundlessEnterprises.Application.Work.Queries.GetRings;
 using MediatR;
 
@@ -74,6 +76,14 @@ public sealed class WorkEndpoints : IEndpointModule
                 b.Tags, b.DomainDataJson), ct);
             return Results.Created($"/api/assignments/{dto.Id}", dto);
         }).WithName("CreateAssignment").WithSummary("Create an assignment for a ring.");
+
+        rings.MapGet("/{ringId:guid}/events", async (Guid ringId, ISender sender, CancellationToken ct) =>
+            Results.Ok(await sender.Send(new GetRingEventsQuery(ringId), ct)))
+            .WithName("GetRingEvents").WithSummary("A ring's calendar entries.");
+
+        rings.MapGet("/{ringId:guid}/activity", async (Guid ringId, ISender sender, CancellationToken ct) =>
+            Results.Ok(await sender.Send(new GetRingActivityQuery(ringId), ct)))
+            .WithName("GetRingActivity").WithSummary("A ring's recent activity.");
 
         var assignments = app.MapGroup("/api/assignments").WithTags("Work — Assignments").RequireAuthorization();
 

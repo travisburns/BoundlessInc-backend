@@ -160,6 +160,20 @@ public sealed class ApplicationDbSeeder
         _db.Assignments.Add(Build("RES-0022", "Ambient Bed — Forest of Hollows", "Loopable ambience",
             AssignmentType.Create, AssignmentPriority.Low, WorkStatus.Complete, 100, 2));
 
+        // Calendar entries.
+        _db.RingEvents.AddRange(
+            RingEvent.Create(ring.Id, "Review: Battle Theme v2", Due(8), "10:00 AM", "Internal Review"),
+            RingEvent.Create(ring.Id, "Sound Library Check-in", Due(12), "2:00 PM", "Team Call"),
+            RingEvent.Create(ring.Id, "Avarra Theme Draft Due", Due(16), "End of Day", null),
+            RingEvent.Create(ring.Id, "Main Cast Themes Due", Due(20), "End of Day", null));
+
+        // Recent activity.
+        _db.RingActivities.AddRange(
+            RingActivity.Create(ring.Id, RingActivityKind.FileUpload, "You uploaded a new file", now.AddHours(-2)),
+            RingActivity.Create(ring.Id, RingActivityKind.Update, "You updated RES-0042", now.AddHours(-4)),
+            RingActivity.Create(ring.Id, RingActivityKind.Comment, "You added a comment", now.AddHours(-5)),
+            RingActivity.Create(ring.Id, RingActivityKind.Draft, "You submitted a draft", now.AddDays(-1)));
+
         ring.SetNextSequence(43);
         await _db.SaveChangesAsync(cancellationToken);
         _logger.LogInformation("Seeded The Resonance ring (holder {Email}) with sample assignments.", holderEmail);

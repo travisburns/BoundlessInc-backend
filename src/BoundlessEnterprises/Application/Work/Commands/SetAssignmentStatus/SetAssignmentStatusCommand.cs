@@ -45,6 +45,10 @@ public class SetAssignmentStatusHandler : IRequestHandler<SetAssignmentStatusCom
         if (request.ProgressPercent is int pct)
             assignment.SetProgress(pct);
 
+        _db.RingActivities.Add(Domain.Work.RingActivity.Create(
+            ring.Id, Domain.Work.RingActivityKind.Status,
+            $"{assignment.Code} moved to {status}", _clock.UtcNow));
+
         await _db.SaveChangesAsync(cancellationToken);
         return AssignmentDto.FromEntity(assignment, ring.Name);
     }

@@ -46,6 +46,8 @@ public class AddAssignmentUpdateHandler : IRequestHandler<AddAssignmentUpdateCom
 
         var author = _currentUser.Email ?? ring.HolderName;
         assignment.AddUpdate(author, request.Body, _clock.UtcNow);
+        _db.RingActivities.Add(Domain.Work.RingActivity.Create(
+            ring.Id, Domain.Work.RingActivityKind.Update, $"Update posted on {assignment.Code}", _clock.UtcNow));
 
         await _db.SaveChangesAsync(cancellationToken);
         return AssignmentDto.FromEntity(assignment, ring.Name);
