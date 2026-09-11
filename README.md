@@ -1,8 +1,9 @@
 # Boundless Enterprises — Backend
 
 The .NET API for the Boundless Enterprises central platform (the holding
-company's digital operating layer). Built as a **modular monolith** with clean
-internal boundaries, following the platform architecture document.
+company's digital operating layer). Built as a **modular monolith**: one app
+project with clear internal boundaries kept as folders, following the platform
+architecture document.
 
 > Frontend lives in a separate repository: **Boundlessinc** (Next.js).
 
@@ -11,25 +12,26 @@ internal boundaries, following the platform architecture document.
 ```
 backend/
 ├── BoundlessEnterprises.sln
-├── Directory.Build.props        # shared build settings (net8.0, nullable)
 ├── docker-compose.yml           # local SQL Server 2022
 ├── src/
-│   ├── BoundlessEnterprises.Domain/          # business concepts, no infrastructure
-│   ├── BoundlessEnterprises.Application/      # use cases (CQRS + MediatR), validation
-│   ├── BoundlessEnterprises.Infrastructure/  # EF Core, SQL Server, persistence, seed
-│   └── BoundlessEnterprises.Api/             # thin HTTP surface (minimal-API endpoint modules)
+│   └── BoundlessEnterprises/     # the app (net8.0 web) — one project
+│       ├── Domain/               # business concepts, no infrastructure
+│       ├── Application/          # use cases (CQRS + MediatR), validation
+│       ├── Infrastructure/       # EF Core, SQL Server, persistence, seed
+│       ├── Api/                  # thin HTTP surface (minimal-API endpoint modules)
+│       └── Program.cs            # web host + DI wiring
 └── tests/
-    ├── BoundlessEnterprises.UnitTests/
-    └── BoundlessEnterprises.IntegrationTests/
+    └── BoundlessEnterprises.Tests/   # unit tests (xUnit)
 ```
 
-Dependency direction: **Api → Infrastructure → Application → Domain**. The
-Domain project has no dependency on EF Core, HTTP, or external SDKs.
+Two projects: the app and its tests. The layer folders keep the same internal
+boundaries — Domain holds no EF Core / HTTP / SDK concerns — just without the
+overhead of separate `.csproj` projects.
 
 ## Layer responsibilities
 
-| Layer | Holds | Never holds |
-|-------|-------|-------------|
+| Folder | Holds | Never holds |
+|--------|-------|-------------|
 | Domain | Entities, enums, domain events, invariants | HTTP, EF Core, Stripe |
 | Application | Commands/Queries, handlers, validators, DTOs, interfaces | Concrete persistence, controllers |
 | Infrastructure | `ApplicationDbContext`, EF configurations, migrations, seeders, external clients | Business rules |
@@ -59,14 +61,14 @@ docker compose up -d
 dotnet build
 
 # 3. Run the API (applies migrations + seeds the portfolio in Development)
-dotnet run --project src/BoundlessEnterprises.Api
+dotnet run --project src/BoundlessEnterprises
 
 # API:     http://localhost:5080
 # Swagger: http://localhost:5080/swagger
 # Health:  http://localhost:5080/health
 ```
 
-The connection string lives in `src/BoundlessEnterprises.Api/appsettings.json`
+The connection string lives in `src/BoundlessEnterprises/appsettings.json`
 under `ConnectionStrings:Default` and can be overridden with the
 `ConnectionStrings__Default` environment variable.
 
@@ -74,13 +76,10 @@ under `ConnectionStrings:Default` and can be overridden with the
 
 ```bash
 dotnet ef migrations add <Name> \
-  --project src/BoundlessEnterprises.Infrastructure \
-  --startup-project src/BoundlessEnterprises.Api \
-  --output-dir Persistence/Migrations
+  --project src/BoundlessEnterprises \
+  --output-dir Infrastructure/Persistence/Migrations
 
-dotnet ef database update \
-  --project src/BoundlessEnterprises.Infrastructure \
-  --startup-project src/BoundlessEnterprises.Api
+dotnet ef database update --project src/BoundlessEnterprises
 ```
 
 ### Tests
