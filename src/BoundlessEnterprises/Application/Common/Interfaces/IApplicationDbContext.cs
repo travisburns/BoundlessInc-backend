@@ -43,6 +43,7 @@ public interface IApplicationDbContext
     DbSet<AssignmentUpdate> AssignmentUpdates { get; }
     DbSet<RingEvent> RingEvents { get; }
     DbSet<RingActivity> RingActivities { get; }
+    DbSet<RingHolderInvitation> RingHolderInvitations { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

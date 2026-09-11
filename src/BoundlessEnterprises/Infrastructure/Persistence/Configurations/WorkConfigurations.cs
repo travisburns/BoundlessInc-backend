@@ -105,3 +105,19 @@ public sealed class RingActivityConfiguration : IEntityTypeConfiguration<RingAct
         builder.HasIndex(a => a.RingId);
     }
 }
+
+public sealed class RingHolderInvitationConfiguration : IEntityTypeConfiguration<RingHolderInvitation>
+{
+    public void Configure(EntityTypeBuilder<RingHolderInvitation> builder)
+    {
+        builder.ToTable("RingHolderInvitations", "work");
+        builder.HasKey(i => i.Id);
+        builder.Property(i => i.FirstName).HasMaxLength(100).IsRequired();
+        builder.Property(i => i.LastName).HasMaxLength(100).IsRequired();
+        builder.Property(i => i.Email).HasMaxLength(256).IsRequired();
+        builder.Property(i => i.CodeHash).HasMaxLength(100).IsRequired();
+        builder.Property(i => i.Status).HasConversion<string>().HasMaxLength(20);
+        builder.HasIndex(i => i.CodeHash).IsUnique();
+        builder.HasIndex(i => i.RingId);
+    }
+}

@@ -1,9 +1,13 @@
+using BoundlessEnterprises.Application.Work.Commands.AcceptRingHolderInvite;
 using BoundlessEnterprises.Application.Work.Commands.AddAssignmentUpdate;
 using BoundlessEnterprises.Application.Work.Commands.CreateAssignment;
 using BoundlessEnterprises.Application.Work.Commands.CreateRing;
+using BoundlessEnterprises.Application.Work.Commands.CreateRingHolderInvitation;
 using BoundlessEnterprises.Application.Work.Commands.SetAssignmentStatus;
+using BoundlessEnterprises.Application.Work.Commands.SetRingHolder;
 using BoundlessEnterprises.Application.Work.Commands.UpdateAssignment;
 using BoundlessEnterprises.Application.Work.Commands.UpdateRing;
+using BoundlessEnterprises.Application.Work.Queries.GetRingHolderInvite;
 using BoundlessEnterprises.Application.Work.Queries.GetAssignment;
 using BoundlessEnterprises.Application.Work.Queries.GetAssignments;
 using BoundlessEnterprises.Application.Work.Queries.GetMyRing;
@@ -31,9 +35,23 @@ public sealed class WorkEndpoints : IEndpointModule
 
     public record StatusBody(string Status, int? ProgressPercent);
     public record UpdateBody(string Body);
+    public record HolderInviteBody(string FirstName, string LastName, string Email, int? ExpiresInDays);
+    public record SetHolderBody(string? Email, bool? Clear);
+    public record AcceptHolderBody(string Password, string? FirstName, string? LastName);
 
     public void MapEndpoints(IEndpointRouteBuilder app)
     {
+        // Public: ring-holder onboarding (redeem code → set password → hold the ring).
+        app.MapGet("/api/ring-invite/{code}", async (string code, ISender sender, CancellationToken ct) =>
+            Results.Ok(await sender.Send(new GetRingHolderInviteQuery(code), ct)))
+            .AllowAnonymous().WithTags("Work — Rings").WithName("GetRingHolderInvite")
+            .WithSummary("Resolve a ring-holder invitation by code.");
+
+        app.MapPost("/api/ring-invite/{code}/accept", async (string code, AcceptHolderBody b, ISender sender, CancellationToken ct) =>
+            Results.Ok(await sender.Send(new AcceptRingHolderInviteCommand(code, b.Password, b.FirstName, b.LastName), ct)))
+            .AllowAnonymous().WithTags("Work — Rings").WithName("AcceptRingHolderInvite")
+            .WithSummary("Accept a ring-holder invitation, creating the login and assigning the holder.");
+
         var rings = app.MapGroup("/api/rings").WithTags("Work — Rings").RequireAuthorization();
 
         rings.MapGet("/", async (ISender sender, CancellationToken ct) =>
@@ -84,6 +102,14 @@ public sealed class WorkEndpoints : IEndpointModule
         rings.MapGet("/{ringId:guid}/activity", async (Guid ringId, ISender sender, CancellationToken ct) =>
             Results.Ok(await sender.Send(new GetRingActivityQuery(ringId), ct)))
             .WithName("GetRingActivity").WithSummary("A ring's recent activity.");
+
+        rings.MapPost("/{ringId:guid}/holder/invite", async (Guid ringId, HolderInviteBody b, ISender sender, CancellationToken ct) =>
+            Results.Ok(await sender.Send(new CreateRingHolderInvitationCommand(ringId, b.FirstName, b.LastName, b.Email, b.ExpiresInDays ?? 14), ct)))
+            .WithName("InviteRingHolder").WithSummary("Invite a person to hold a ring (returns the code once).");
+
+        rings.MapPost("/{ringId:guid}/holder", async (Guid ringId, SetHolderBody b, ISender sender, CancellationToken ct) =>
+            Results.Ok(await sender.Send(new SetRingHolderCommand(ringId, b.Email, b.Clear ?? false), ct)))
+            .WithName("SetRingHolder").WithSummary("Assign an existing user (or the caller) as holder, or clear it.");
 
         var assignments = app.MapGroup("/api/assignments").WithTags("Work — Assignments").RequireAuthorization();
 

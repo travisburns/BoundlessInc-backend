@@ -106,6 +106,29 @@ public record RingActivityDto
     };
 }
 
+/// <summary>Returned to the admin when a holder invitation is created — the code, shown once.</summary>
+public record RingHolderInviteCreatedDto
+{
+    public string Code { get; init; } = string.Empty;
+    public string RingName { get; init; } = string.Empty;
+    public string RingSlug { get; init; } = string.Empty;
+    public string Email { get; init; } = string.Empty;
+    public DateTime ExpiresAtUtc { get; init; }
+}
+
+/// <summary>Public view of a holder invitation for the accept page.</summary>
+public record RingHolderInviteDto
+{
+    public string RingName { get; init; } = string.Empty;
+    public string RingSlug { get; init; } = string.Empty;
+    public string? Disciplines { get; init; }
+    public string? AccentColor { get; init; }
+    public string FirstName { get; init; } = string.Empty;
+    public string LastName { get; init; } = string.Empty;
+    public string Email { get; init; } = string.Empty;
+    public string Status { get; init; } = string.Empty;
+}
+
 public record AssignmentSummaryDto
 {
     public Guid Id { get; init; }
