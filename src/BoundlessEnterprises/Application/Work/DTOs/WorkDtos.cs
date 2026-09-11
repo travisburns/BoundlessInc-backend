@@ -116,6 +116,44 @@ public record RingHolderInviteCreatedDto
     public DateTime ExpiresAtUtc { get; init; }
 }
 
+public record RingOverviewRow
+{
+    public string Domain { get; init; } = string.Empty;
+    public string Slug { get; init; } = string.Empty;
+    public string Name { get; init; } = string.Empty;
+    public string HolderName { get; init; } = string.Empty;
+    public bool Held { get; init; }
+    public string? AccentColor { get; init; }
+    public int ActiveAssignments { get; init; }
+    public int InReview { get; init; }
+    public int Blocked { get; init; }
+}
+
+public record OrgCompanyRow
+{
+    public string Name { get; init; } = string.Empty;
+    public string Status { get; init; } = string.Empty;
+    public string Type { get; init; } = string.Empty;
+}
+
+public record OrgTotalsDto
+{
+    public int TotalRings { get; init; }
+    public int HeldRings { get; init; }
+    public int ActiveAssignments { get; init; }
+    public int InReview { get; init; }
+    public int Blocked { get; init; }
+    public int Companies { get; init; }
+}
+
+public record OrgOverviewDto
+{
+    public OrgTotalsDto Totals { get; init; } = new();
+    public IReadOnlyList<RingOverviewRow> Rings { get; init; } = Array.Empty<RingOverviewRow>();
+    public IReadOnlyList<OrgCompanyRow> Companies { get; init; } = Array.Empty<OrgCompanyRow>();
+    public IReadOnlyList<RingActivityDto> RecentActivity { get; init; } = Array.Empty<RingActivityDto>();
+}
+
 public record RingFileDto
 {
     public Guid Id { get; init; }
