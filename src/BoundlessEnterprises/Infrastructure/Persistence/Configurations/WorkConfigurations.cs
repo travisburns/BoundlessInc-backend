@@ -121,3 +121,19 @@ public sealed class RingHolderInvitationConfiguration : IEntityTypeConfiguration
         builder.HasIndex(i => i.RingId);
     }
 }
+
+public sealed class RingFileConfiguration : IEntityTypeConfiguration<RingFile>
+{
+    public void Configure(EntityTypeBuilder<RingFile> builder)
+    {
+        builder.ToTable("RingFiles", "work");
+        builder.HasKey(f => f.Id);
+        builder.Property(f => f.FileName).HasMaxLength(300).IsRequired();
+        builder.Property(f => f.ContentType).HasMaxLength(150).IsRequired();
+        builder.Property(f => f.StorageKey).HasMaxLength(80).IsRequired();
+        builder.Property(f => f.Kind).HasConversion<string>().HasMaxLength(20);
+        builder.Property(f => f.UploadedBy).HasMaxLength(160);
+        builder.HasIndex(f => f.RingId);
+        builder.HasIndex(f => f.AssignmentId);
+    }
+}

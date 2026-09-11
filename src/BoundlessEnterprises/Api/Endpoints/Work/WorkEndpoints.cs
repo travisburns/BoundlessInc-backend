@@ -1,13 +1,19 @@
+using BoundlessEnterprises.Application.Common.Interfaces;
 using BoundlessEnterprises.Application.Work.Commands.AcceptRingHolderInvite;
 using BoundlessEnterprises.Application.Work.Commands.AddAssignmentUpdate;
 using BoundlessEnterprises.Application.Work.Commands.CreateAssignment;
 using BoundlessEnterprises.Application.Work.Commands.CreateRing;
 using BoundlessEnterprises.Application.Work.Commands.CreateRingHolderInvitation;
+using BoundlessEnterprises.Application.Work.Commands.DeleteRingFile;
+using BoundlessEnterprises.Application.Work.Commands.RegisterRingFile;
 using BoundlessEnterprises.Application.Work.Commands.SetAssignmentStatus;
 using BoundlessEnterprises.Application.Work.Commands.SetRingHolder;
 using BoundlessEnterprises.Application.Work.Commands.UpdateAssignment;
 using BoundlessEnterprises.Application.Work.Commands.UpdateRing;
+using BoundlessEnterprises.Application.Work.Queries.GetRingFile;
+using BoundlessEnterprises.Application.Work.Queries.GetRingFiles;
 using BoundlessEnterprises.Application.Work.Queries.GetRingHolderInvite;
+using Microsoft.AspNetCore.Mvc;
 using BoundlessEnterprises.Application.Work.Queries.GetAssignment;
 using BoundlessEnterprises.Application.Work.Queries.GetAssignments;
 using BoundlessEnterprises.Application.Work.Queries.GetMyRing;
@@ -110,6 +116,40 @@ public sealed class WorkEndpoints : IEndpointModule
         rings.MapPost("/{ringId:guid}/holder", async (Guid ringId, SetHolderBody b, ISender sender, CancellationToken ct) =>
             Results.Ok(await sender.Send(new SetRingHolderCommand(ringId, b.Email, b.Clear ?? false), ct)))
             .WithName("SetRingHolder").WithSummary("Assign an existing user (or the caller) as holder, or clear it.");
+
+        rings.MapGet("/{ringId:guid}/files", async (Guid ringId, Guid? assignmentId, ISender sender, CancellationToken ct) =>
+            Results.Ok(await sender.Send(new GetRingFilesQuery(ringId, assignmentId), ct)))
+            .WithName("GetRingFiles").WithSummary("List a ring's files.");
+
+        rings.MapPost("/{ringId:guid}/files", async (Guid ringId, IFormFile file, [FromForm] Guid? assignmentId,
+            IFileStorage storage, ISender sender, CancellationToken ct) =>
+        {
+            if (file is null || file.Length == 0) return Results.BadRequest("No file provided.");
+            await using var stream = file.OpenReadStream();
+            var key = await storage.SaveAsync(stream, ct);
+            var dto = await sender.Send(new RegisterRingFileCommand(ringId, assignmentId, file.FileName,
+                file.ContentType ?? "application/octet-stream", file.Length, key), ct);
+            return Results.Created($"/api/ring-files/{dto.Id}", dto);
+        })
+            .DisableAntiforgery()
+            .WithName("UploadRingFile").WithSummary("Upload a file to a ring (optionally tied to an assignment).");
+
+        var files = app.MapGroup("/api/ring-files").WithTags("Work — Files").RequireAuthorization();
+
+        files.MapGet("/{id:guid}/download", async (Guid id, IFileStorage storage, ISender sender, CancellationToken ct) =>
+        {
+            var info = await sender.Send(new GetRingFileForDownloadQuery(id), ct);
+            var stream = await storage.OpenReadAsync(info.StorageKey, ct);
+            return stream is null ? Results.NotFound() : Results.File(stream, info.ContentType, info.FileName);
+        })
+            .WithName("DownloadRingFile").WithSummary("Download a ring file.");
+
+        files.MapDelete("/{id:guid}", async (Guid id, ISender sender, CancellationToken ct) =>
+        {
+            await sender.Send(new DeleteRingFileCommand(id), ct);
+            return Results.NoContent();
+        })
+            .WithName("DeleteRingFile").WithSummary("Delete a ring file.");
 
         var assignments = app.MapGroup("/api/assignments").WithTags("Work — Assignments").RequireAuthorization();
 

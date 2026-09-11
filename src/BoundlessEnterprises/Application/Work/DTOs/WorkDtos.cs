@@ -116,6 +116,32 @@ public record RingHolderInviteCreatedDto
     public DateTime ExpiresAtUtc { get; init; }
 }
 
+public record RingFileDto
+{
+    public Guid Id { get; init; }
+    public Guid RingId { get; init; }
+    public Guid? AssignmentId { get; init; }
+    public string FileName { get; init; } = string.Empty;
+    public string ContentType { get; init; } = string.Empty;
+    public long SizeBytes { get; init; }
+    public string Kind { get; init; } = string.Empty;
+    public string UploadedBy { get; init; } = string.Empty;
+    public DateTime CreatedAtUtc { get; init; }
+
+    public static RingFileDto FromEntity(RingFile f) => new()
+    {
+        Id = f.Id,
+        RingId = f.RingId,
+        AssignmentId = f.AssignmentId,
+        FileName = f.FileName,
+        ContentType = f.ContentType,
+        SizeBytes = f.SizeBytes,
+        Kind = f.Kind.ToString(),
+        UploadedBy = f.UploadedBy,
+        CreatedAtUtc = f.CreatedAtUtc,
+    };
+}
+
 /// <summary>Public view of a holder invitation for the accept page.</summary>
 public record RingHolderInviteDto
 {

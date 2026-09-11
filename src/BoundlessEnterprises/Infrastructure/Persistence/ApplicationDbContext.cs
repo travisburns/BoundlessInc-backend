@@ -52,6 +52,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<RingEvent> RingEvents => Set<RingEvent>();
     public DbSet<RingActivity> RingActivities => Set<RingActivity>();
     public DbSet<RingHolderInvitation> RingHolderInvitations => Set<RingHolderInvitation>();
+    public DbSet<RingFile> RingFiles => Set<RingFile>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

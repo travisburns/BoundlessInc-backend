@@ -47,6 +47,7 @@ public static class DependencyInjection
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IEmailSender, LoggingEmailSender>();
+        services.AddSingleton<IFileStorage, Storage.LocalFileStorage>();
 
         // Payments: use real Stripe when a secret key is configured, else the
         // stub gateway so the platform runs end-to-end without credentials.

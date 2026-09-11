@@ -7,6 +7,9 @@ using BoundlessEnterprises.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Allow larger uploads (audio stems, art, project files) — up to 100 MB.
+builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = 104_857_600);
+
 const string CorsPolicy = "BoundlessWeb";
 
 // ---- Services ----------------------------------------------------------------
