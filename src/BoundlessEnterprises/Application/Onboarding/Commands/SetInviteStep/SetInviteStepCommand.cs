@@ -14,7 +14,7 @@ namespace BoundlessEnterprises.Application.Onboarding.Commands.SetInviteStep;
 /// When every required step is done, the invitation itself is marked completed
 /// and the employee is activated.
 /// </summary>
-public record SetInviteStepCommand(string Code, Guid StepId, bool Completed)
+public record SetInviteStepCommand(string Code, Guid StepId, bool Completed, string? ResponseJson = null)
     : IRequest<InviteDetailDto>;
 
 public class SetInviteStepHandler : IRequestHandler<SetInviteStepCommand, InviteDetailDto>
@@ -45,7 +45,7 @@ public class SetInviteStepHandler : IRequestHandler<SetInviteStepCommand, Invite
             ?? throw new NotFoundException("OnboardingProcess", processId);
 
         if (request.Completed)
-            process.CompleteStep(request.StepId, _clock.UtcNow);
+            process.CompleteStep(request.StepId, _clock.UtcNow, request.ResponseJson);
         else
             process.ReopenStep(request.StepId);
 

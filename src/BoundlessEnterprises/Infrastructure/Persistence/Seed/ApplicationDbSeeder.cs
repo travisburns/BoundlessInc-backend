@@ -10,6 +10,7 @@ using BoundlessEnterprises.Domain.Onboarding;
 using BoundlessEnterprises.Domain.Payments;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using K = BoundlessEnterprises.Domain.Onboarding.OnboardingStepKind;
 
 namespace BoundlessEnterprises.Infrastructure.Persistence.Seed;
 
@@ -194,10 +195,85 @@ public sealed class ApplicationDbSeeder
         _logger.LogInformation("Seeded platform admin {Email} (default password ChangeMe!123).", adminEmail);
     }
 
+    // One tailored onboarding template per company. Every company shares the
+    // reusable engine; only the step list (and the forms each step renders,
+    // via its kind) differs. K is a short alias for the step kind.
+    private static readonly IReadOnlyList<CompanyOnboarding> OnboardingByCompany = new[]
+    {
+        new CompanyOnboarding("BE-000", "Boundless Enterprises — Team Member",
+            "Onboarding into the holding company and central platform team.", new[]
+            {
+                Step("Personal information", K.PersonalInfo),
+                Step("Emergency contact", K.EmergencyContact),
+                Step("Tax & payroll", K.TaxPayroll),
+                Step("Direct deposit", K.DirectDeposit),
+                Step("Code of conduct", K.PolicyAcknowledgement),
+                Step("Systems & access", K.ITAccess),
+                Step("Welcome orientation", K.Generic, required: false),
+            }),
+        new CompanyOnboarding("BND-001", "Boundless — Creative Team Member",
+            "Onboarding for Boundless media, IP, and worldbuilding staff.", new[]
+            {
+                Step("Personal information", K.PersonalInfo),
+                Step("Emergency contact", K.EmergencyContact),
+                Step("NDA & IP assignment", K.PolicyAcknowledgement),
+                Step("Tax & payroll", K.TaxPayroll),
+                Step("Direct deposit", K.DirectDeposit),
+                Step("Creative tools & accounts", K.ITAccess),
+                Step("Worldbuilding orientation", K.Generic, required: false),
+            }),
+        new CompanyOnboarding("FIRE-001", "Firefin — Kitchen & Hospitality",
+            "Onboarding for Firefin kitchen and hospitality staff.", new[]
+            {
+                Step("Personal information", K.PersonalInfo),
+                Step("Emergency contact", K.EmergencyContact),
+                Step("Weekly availability", K.Availability),
+                Step("Tax & payroll", K.TaxPayroll),
+                Step("Direct deposit", K.DirectDeposit),
+                Step("Food safety & hygiene policy", K.PolicyAcknowledgement),
+                Step("Uniform & equipment", K.ITAccess),
+                Step("Kitchen orientation", K.Generic, required: false),
+            }),
+        new CompanyOnboarding("SKAF-001", "SkaffaldOS — Software Team Member",
+            "Onboarding for SkaffaldOS product and engineering staff.", new[]
+            {
+                Step("Personal information", K.PersonalInfo),
+                Step("Emergency contact", K.EmergencyContact),
+                Step("Tax & payroll", K.TaxPayroll),
+                Step("Direct deposit", K.DirectDeposit),
+                Step("Security & acceptable use policy", K.PolicyAcknowledgement),
+                Step("Developer accounts & access", K.ITAccess),
+                Step("Product onboarding", K.Generic, required: false),
+            }),
+        new CompanyOnboarding("DHW-001", "DigitalHeavyWeights — Engineer",
+            "Onboarding for DigitalHeavyWeights software engineers.", new[]
+            {
+                Step("Personal information", K.PersonalInfo),
+                Step("Emergency contact", K.EmergencyContact),
+                Step("Tax & payroll", K.TaxPayroll),
+                Step("Direct deposit", K.DirectDeposit),
+                Step("Confidentiality & IP policy", K.PolicyAcknowledgement),
+                Step("Engineering environment & access", K.ITAccess),
+                Step("First sprint orientation", K.Generic, required: false),
+            }),
+    };
+
+    // Per-company demo invitations, so every company's flow can be tried
+    // immediately without creating an invite through the portal.
+    private static readonly IReadOnlyList<DemoInvite> DemoInvites = new[]
+    {
+        new DemoInvite("BE-000", "ONB-DEMO-BE", "Jordan", "Vale", "Platform Operations", "jordan.vale@boundless.example"),
+        new DemoInvite("BND-001", "ONB-DEMO-BND", "Wren", "Ashcroft", "Worldbuilding Writer", "wren.ashcroft@boundless.example"),
+        new DemoInvite("FIRE-001", "ONB-DEMO-FIRE", "Sam", "Rivera", "Kitchen Team Member", "sam.rivera@firefin.example"),
+        new DemoInvite("SKAF-001", "ONB-DEMO-SKAF", "Ezra", "Lindqvist", "Product Engineer", "ezra.lindqvist@skaffaldos.example"),
+        new DemoInvite("DHW-001", "ONB-DEMO-DHW", "Nia", "Osei", "Software Engineer", "nia.osei@dhw.example"),
+    };
+
     private async Task SeedOnboardingTemplatesAsync(CancellationToken cancellationToken)
     {
+        var codes = OnboardingByCompany.Select(o => o.CompanyCode).ToList();
         var companiesByCode = await _db.Companies
-            .Where(c => c.Code == "FIRE-001" || c.Code == "BND-001")
+            .Where(c => codes.Contains(c.Code))
             .ToDictionaryAsync(c => c.Code, c => c.Id, cancellationToken);
 
         var existingNames = await _db.OnboardingTemplates
@@ -205,40 +281,16 @@ public sealed class ApplicationDbSeeder
             .ToListAsync(cancellationToken);
 
         var added = 0;
-
-        if (companiesByCode.TryGetValue("FIRE-001", out var firefinId) &&
-            !existingNames.Contains("Firefin — Kitchen Employee"))
+        foreach (var def in OnboardingByCompany)
         {
-            var t = OnboardingTemplate.Create(firefinId, "Firefin — Kitchen Employee",
-                "Onboarding for Firefin kitchen and hospitality staff.");
-            foreach (var name in new[]
-            {
-                "Personal information", "Employment documents", "Tax / payroll information",
-                "Emergency contact", "Policies", "Food safety training",
-                "Firefin orientation", "Equipment / access", "Manager approval",
-            })
-            {
-                t.AddStep(name);
-            }
-            _db.OnboardingTemplates.Add(t);
-            added++;
-        }
+            if (!companiesByCode.TryGetValue(def.CompanyCode, out var companyId)) continue;
+            if (existingNames.Contains(def.TemplateName)) continue;
 
-        if (companiesByCode.TryGetValue("BND-001", out var boundlessId) &&
-            !existingNames.Contains("Boundless — Creative Employee"))
-        {
-            var t = OnboardingTemplate.Create(boundlessId, "Boundless — Creative Employee",
-                "Onboarding for Boundless creative and worldbuilding staff.");
-            foreach (var name in new[]
-            {
-                "Personal information", "NDA / IP agreement", "Core onboarding",
-                "Soul Skill", "Ring assignment", "Mask / Veil / Quill",
-                "Project access", "Software accounts", "First Horizon",
-            })
-            {
-                t.AddStep(name);
-            }
-            _db.OnboardingTemplates.Add(t);
+            var template = OnboardingTemplate.Create(companyId, def.TemplateName, def.Description);
+            foreach (var step in def.Steps)
+                template.AddStep(step.Name, description: null, isRequired: step.Required, kind: step.Kind);
+
+            _db.OnboardingTemplates.Add(template);
             added++;
         }
 
@@ -250,32 +302,44 @@ public sealed class ApplicationDbSeeder
     }
 
     /// <summary>
-    /// Seeds one demo self-serve invitation with a fixed, well-known code so the
-    /// public onboarding wizard can be tried immediately without first creating
-    /// an invite through the portal.
+    /// Seeds one demo self-serve invitation per company with a fixed, well-known
+    /// code so each company's onboarding wizard can be tried immediately.
     /// </summary>
     private async Task SeedOnboardingInvitationsAsync(CancellationToken cancellationToken)
     {
-        const string demoCode = "ONB-DEMO-2025";
-        var demoHash = InviteCodes.Hash(demoCode);
+        var templatesByCompany = await _db.OnboardingTemplates
+            .ToDictionaryAsync(t => t.CompanyId, t => t, cancellationToken);
+        var companyIdByCode = await _db.Companies
+            .Where(c => DemoInvites.Select(d => d.CompanyCode).Contains(c.Code))
+            .ToDictionaryAsync(c => c.Code, c => c.Id, cancellationToken);
 
-        if (await _db.OnboardingInvitations.AnyAsync(i => i.CodeHash == demoHash, cancellationToken))
-            return;
+        var added = 0;
+        foreach (var demo in DemoInvites)
+        {
+            if (!companyIdByCode.TryGetValue(demo.CompanyCode, out var companyId)) continue;
+            if (!templatesByCompany.TryGetValue(companyId, out var template)) continue;
 
-        var template = await _db.OnboardingTemplates
-            .FirstOrDefaultAsync(t => t.Name == "Firefin — Kitchen Employee", cancellationToken);
-        if (template is null)
-            return;
+            var hash = InviteCodes.Hash(demo.Code);
+            if (await _db.OnboardingInvitations.AnyAsync(i => i.CodeHash == hash, cancellationToken))
+                continue;
 
-        var invitation = OnboardingInvitation.Create(
-            template.CompanyId, template.Id, "new.hire@firefin.example",
-            "Sam", "Rivera", "Kitchen Team Member", demoHash,
-            DateTime.UtcNow.AddDays(30));
+            _db.OnboardingInvitations.Add(OnboardingInvitation.Create(
+                companyId, template.Id, demo.Email, demo.FirstName, demo.LastName,
+                demo.Title, hash, DateTime.UtcNow.AddDays(60)));
+            added++;
+            _logger.LogInformation("Seeded demo onboarding invitation for {Company} (code {Code}).",
+                demo.CompanyCode, demo.Code);
+        }
 
-        _db.OnboardingInvitations.Add(invitation);
-        await _db.SaveChangesAsync(cancellationToken);
-        _logger.LogInformation("Seeded demo onboarding invitation (code {Code}).", demoCode);
+        if (added > 0)
+            await _db.SaveChangesAsync(cancellationToken);
     }
+
+    private static StepDef Step(string name, OnboardingStepKind kind, bool required = true) => new(name, kind, required);
+
+    private sealed record StepDef(string Name, OnboardingStepKind Kind, bool Required);
+    private sealed record CompanyOnboarding(string CompanyCode, string TemplateName, string Description, StepDef[] Steps);
+    private sealed record DemoInvite(string CompanyCode, string Code, string FirstName, string LastName, string Title, string Email);
 
     private async Task SeedBillingAsync(CancellationToken cancellationToken)
     {

@@ -13,7 +13,7 @@ namespace BoundlessEnterprises.Api.Endpoints.Onboarding;
 public sealed class PublicOnboardingEndpoints : IEndpointModule
 {
     public record StartRequest(string? FirstName, string? LastName);
-    public record SetStepRequest(bool Completed);
+    public record SetStepRequest(bool Completed, string? ResponseJson);
 
     public void MapEndpoints(IEndpointRouteBuilder app)
     {
@@ -33,7 +33,7 @@ public sealed class PublicOnboardingEndpoints : IEndpointModule
 
         group.MapPatch("/{code}/steps/{stepId:guid}",
             async (string code, Guid stepId, SetStepRequest body, ISender sender, CancellationToken ct) =>
-                Results.Ok(await sender.Send(new SetInviteStepCommand(code, stepId, body.Completed), ct)))
+                Results.Ok(await sender.Send(new SetInviteStepCommand(code, stepId, body.Completed, body.ResponseJson), ct)))
             .WithName("SetOnboardingInviteStep")
             .WithSummary("Mark one of the new hire's onboarding steps complete or reopen it.");
     }
