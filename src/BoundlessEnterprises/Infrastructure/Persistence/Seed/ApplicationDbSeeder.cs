@@ -51,16 +51,97 @@ public sealed class ApplicationDbSeeder
         await SeedRingsAsync(cancellationToken);
     }
 
+    private sealed record RingSeed(
+        RingDomain Domain, string Name, string Prefix, string Disciplines,
+        string HeroTitle, string HeroSubtitle, string Focus, string Motto, string Accent,
+        (string Label, string Sublabel)[] Resources);
+
+    // The thirteen organs of Boundless Enterprises.
+    private static readonly RingSeed[] RingSeeds =
+    {
+        new(RingDomain.Crown, "The Crown", "CRN", "Strategy · Direction · Leadership",
+            "Chart the Greater Tomorrow", "The long view.", "Lead where the map ends.",
+            "Direction is destiny.", "#D4AF37",
+            new[] { ("Company Dashboard", "All rings & companies"), ("Strategy Docs", "Vision & OKRs"), ("Board Reports", "Governance") }),
+        new(RingDomain.World, "The World", "WLD", "Worldbuilding · Story · Lore · Canon",
+            "Give the Universe Its Story", "Every world begins with a word.", "Canon is the memory of a world.",
+            "Stories outlive their tellers.", "#7C3AED",
+            new[] { ("Canon Library", "Lore & timelines"), ("Character Bible", "Cast & arcs"), ("Style Guide", "Voice & tone") }),
+        new(RingDomain.Image, "The Image", "IMG", "Illustration · Concept · 3D · Visual Development",
+            "Make the Unseen Seen", "Vision before form.", "Art is the first sight of a world.",
+            "Every world needs a face.", "#DB2777",
+            new[] { ("Art Library", "Concepts & renders"), ("Brand Kit", "Palettes & marks"), ("References", "Moodboards") }),
+        new(RingDomain.Resonance, "The Resonance", "RES", "Music · Audio · Sound Design · Emotion",
+            "Create Worlds Through Sound", "Same notes. Greater realms.", "Music is the bridge between emotion and reality.",
+            "Sound gives worlds a soul.", "#C2410C",
+            new[] { ("Audio Library", "Samples & Instruments"), ("Style Guide", "Musical Direction"), ("World References", "Regions & Cultures"), ("Tools & Software", "Approved Tools") }),
+        new(RingDomain.Machine, "The Machine", "MCH", "Applications · Backend · Infrastructure · AI",
+            "Build the Engines of Worlds", "Systems that hold the weight.", "Good systems disappear into use.",
+            "Worlds run on what we build.", "#2563EB",
+            new[] { ("Repositories", "Codebases"), ("Infra Console", "Environments"), ("Docs", "Architecture") }),
+        new(RingDomain.Compass, "The Compass", "CMP", "Product · Roadmaps · Requirements · User Needs",
+            "Point at What Matters", "Build the right thing.", "The user is the true north.",
+            "Not what can be built — what should be.", "#0891B2",
+            new[] { ("Roadmap", "Now / Next / Later"), ("Specs", "Requirements"), ("Research", "User insight") }),
+        new(RingDomain.Engine, "The Engine", "ENG", "Operations · Production · Delivery · Coordination",
+            "Keep the Worlds Turning", "Everything, on time.", "Delivery is where vision meets reality.",
+            "Momentum is a discipline.", "#059669",
+            new[] { ("Schedules", "Timelines"), ("Vendors", "Suppliers"), ("Runbooks", "Process") }),
+        new(RingDomain.Ledger, "The Ledger", "LDG", "Budgets · Accounting · Payroll · Forecasting",
+            "Steward Every Resource", "The numbers tell the truth.", "Fund the future, honestly.",
+            "What is measured endures.", "#16A34A",
+            new[] { ("Budgets", "By company"), ("Payroll", "Compensation"), ("Forecasts", "Projections") }),
+        new(RingDomain.Seal, "The Seal", "SEL", "Copyright · Trademark · Contracts · Compliance",
+            "Protect What We Create", "Guard the work.", "Protection is a form of respect.",
+            "Ideas deserve armor.", "#B91C1C",
+            new[] { ("Contracts", "Agreements"), ("IP Registry", "Marks & rights"), ("Compliance", "Policies") }),
+        new(RingDomain.Hearth, "The Hearth", "HTH", "Recruiting · HR · Development · Culture",
+            "Tend the People", "The team is the treasure.", "Grow the people, grow everything.",
+            "Worlds are built by people.", "#EA580C",
+            new[] { ("Directory", "People"), ("Hiring", "Pipelines"), ("Handbook", "Culture") }),
+        new(RingDomain.Herald, "The Herald", "HRD", "Advertising · Brand · Social · Press",
+            "Announce the New World", "Make them look.", "Tell the truth, beautifully.",
+            "A world unseen is a world unmade.", "#C026D3",
+            new[] { ("Campaigns", "Active work"), ("Brand", "Identity"), ("Press", "Media") }),
+        new(RingDomain.Gate, "The Gate", "GTE", "Sales · Partnerships · Licensing · Deals",
+            "Open the Ways", "Bring the worlds to market.", "Value, exchanged fairly.",
+            "Every deal is a door.", "#0D9488",
+            new[] { ("Pipeline", "Deals"), ("Partners", "Relationships"), ("Licensing", "Rights") }),
+        new(RingDomain.Circle, "The Circle", "CRC", "Community · Support · Fans · Retention",
+            "Hold the Circle", "Keep the people close.", "Belonging is the best retention.",
+            "A world is its people.", "#4F46E5",
+            new[] { ("Community", "Members"), ("Support", "Tickets"), ("Feedback", "Signals") }),
+    };
+
     /// <summary>
-    /// Seeds "The Resonance" ring (Aaron, head of audio) with its dashboard copy,
-    /// a login for the holder, and the sample assignments from the design.
+    /// Seeds all thirteen ring seats. The Resonance also gets a demo holder (Aaron)
+    /// and the sample assignments from the design; the rest start unheld.
     /// </summary>
     private async Task SeedRingsAsync(CancellationToken cancellationToken)
     {
-        if (await _db.Rings.AnyAsync(r => r.Domain == RingDomain.Resonance, cancellationToken))
+        var existingDomains = await _db.Rings.Select(r => r.Domain).ToListAsync(cancellationToken);
+        var created = 0;
+        foreach (var s in RingSeeds)
+        {
+            if (existingDomains.Contains(s.Domain)) continue;
+            var r = Ring.Create(s.Domain, s.Name, s.Prefix, "Unassigned");
+            r.UpdateProfile(s.Name, s.Disciplines, "Unassigned", s.HeroTitle, s.HeroSubtitle,
+                s.Focus, s.Motto, s.Accent, heroImageUrl: null);
+            r.SetResources(s.Resources.Select(x => new RingResource { Label = x.Label, Sublabel = x.Sublabel }));
+            _db.Rings.Add(r);
+            created++;
+        }
+        if (created > 0)
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+            _logger.LogInformation("Seeded {Count} ring seats.", created);
+        }
+
+        // Demo content for The Resonance — only once.
+        var ring = await _db.Rings.FirstOrDefaultAsync(r => r.Domain == RingDomain.Resonance, cancellationToken);
+        if (ring is null || await _db.Assignments.AnyAsync(a => a.RingId == ring.Id, cancellationToken))
             return;
 
-        // Holder login.
         const string holderEmail = "aaron@boundless.enterprises";
         var aaron = await _db.Users.FirstOrDefaultAsync(u => u.Email == holderEmail, cancellationToken);
         if (aaron is null)
@@ -78,27 +159,7 @@ public sealed class ApplicationDbSeeder
             await _db.SaveChangesAsync(cancellationToken);
         }
 
-        // The Resonance ring.
-        var ring = Ring.Create(RingDomain.Resonance, "The Resonance", "RES", "Aaron");
-        ring.UpdateProfile(
-            "The Resonance",
-            "Music · Audio · Sound Design · Emotion",
-            "Aaron",
-            heroTitle: "Create Worlds Through Sound",
-            heroSubtitle: "Same notes. Greater realms.",
-            focus: "Music is the bridge between emotion and reality.",
-            motto: "Sound gives worlds a soul.",
-            accentColor: "#C2410C",
-            heroImageUrl: null);
-        ring.SetHolderUser(aaron.Id);
-        ring.SetResources(new[]
-        {
-            new RingResource { Label = "Audio Library", Sublabel = "Samples & Instruments", Href = "#" },
-            new RingResource { Label = "Style Guide", Sublabel = "Musical Direction", Href = "#" },
-            new RingResource { Label = "World References", Sublabel = "Regions & Cultures", Href = "#" },
-            new RingResource { Label = "Tools & Software", Sublabel = "Approved Tools", Href = "#" },
-        });
-        _db.Rings.Add(ring);
+        ring.SeedHolder("Aaron", aaron.Id);
         await _db.SaveChangesAsync(cancellationToken);
 
         // Sample assignments (from the design).

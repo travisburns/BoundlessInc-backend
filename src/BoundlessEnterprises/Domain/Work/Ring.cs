@@ -86,6 +86,20 @@ public class Ring : AuditableEntity
 
     public void SetHolderUser(Guid? userId) => HolderUserId = userId;
 
+    /// <summary>Assigns a person as this ring's holder.</summary>
+    public void AssignHolder(string holderName, Guid userId)
+    {
+        if (string.IsNullOrWhiteSpace(holderName)) throw new ArgumentException("Holder name is required.", nameof(holderName));
+        HolderName = holderName.Trim();
+        HolderUserId = userId;
+    }
+
+    public void ClearHolder()
+    {
+        HolderName = "Unassigned";
+        HolderUserId = null;
+    }
+
     public void SetResources(IEnumerable<RingResource> resources)
     {
         Resources = resources.ToList();
