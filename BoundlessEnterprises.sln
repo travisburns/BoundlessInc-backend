@@ -3,21 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{77874F95-117C-45D0-B379-847F6A86A606}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D10ADE68-00D8-46A5-8B9E-015946C4B625}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BoundlessEnterprises.Api", "src\BoundlessEnterprises.Api\BoundlessEnterprises.Api.csproj", "{03A7E086-368D-4784-8D13-1C4105222111}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BoundlessEnterprises", "src\BoundlessEnterprises\BoundlessEnterprises.csproj", "{D264E2A9-7D1F-4F9C-8448-6D76685D1046}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BoundlessEnterprises.Application", "src\BoundlessEnterprises.Application\BoundlessEnterprises.Application.csproj", "{D575EBEF-E8EA-40DA-B5E5-B9929968088D}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{1875AED6-13EB-4078-8A0E-612742D125A7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BoundlessEnterprises.Domain", "src\BoundlessEnterprises.Domain\BoundlessEnterprises.Domain.csproj", "{92ED5EEA-A997-45A3-9774-EC1630284C66}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BoundlessEnterprises.Infrastructure", "src\BoundlessEnterprises.Infrastructure\BoundlessEnterprises.Infrastructure.csproj", "{806098F6-76D8-4A3C-A457-865F3528C78B}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{9A0F7CA5-A6D6-40C0-ADA4-B3F18BEB1A31}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BoundlessEnterprises.IntegrationTests", "tests\BoundlessEnterprises.IntegrationTests\BoundlessEnterprises.IntegrationTests.csproj", "{34F0882D-F5ED-4BB2-88DF-23FE6E3BF432}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BoundlessEnterprises.UnitTests", "tests\BoundlessEnterprises.UnitTests\BoundlessEnterprises.UnitTests.csproj", "{7E34AE40-A69E-45CA-8760-7FF1A134ED53}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BoundlessEnterprises.Tests", "tests\BoundlessEnterprises.Tests\BoundlessEnterprises.Tests.csproj", "{32EF2894-8AB5-4734-B3AA-3509B6ED7FE8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -28,37 +20,17 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{03A7E086-368D-4784-8D13-1C4105222111}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{03A7E086-368D-4784-8D13-1C4105222111}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{03A7E086-368D-4784-8D13-1C4105222111}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{03A7E086-368D-4784-8D13-1C4105222111}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D575EBEF-E8EA-40DA-B5E5-B9929968088D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D575EBEF-E8EA-40DA-B5E5-B9929968088D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D575EBEF-E8EA-40DA-B5E5-B9929968088D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D575EBEF-E8EA-40DA-B5E5-B9929968088D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{92ED5EEA-A997-45A3-9774-EC1630284C66}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{92ED5EEA-A997-45A3-9774-EC1630284C66}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{92ED5EEA-A997-45A3-9774-EC1630284C66}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{92ED5EEA-A997-45A3-9774-EC1630284C66}.Release|Any CPU.Build.0 = Release|Any CPU
-		{806098F6-76D8-4A3C-A457-865F3528C78B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{806098F6-76D8-4A3C-A457-865F3528C78B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{806098F6-76D8-4A3C-A457-865F3528C78B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{806098F6-76D8-4A3C-A457-865F3528C78B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{34F0882D-F5ED-4BB2-88DF-23FE6E3BF432}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{34F0882D-F5ED-4BB2-88DF-23FE6E3BF432}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{34F0882D-F5ED-4BB2-88DF-23FE6E3BF432}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{34F0882D-F5ED-4BB2-88DF-23FE6E3BF432}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7E34AE40-A69E-45CA-8760-7FF1A134ED53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7E34AE40-A69E-45CA-8760-7FF1A134ED53}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7E34AE40-A69E-45CA-8760-7FF1A134ED53}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7E34AE40-A69E-45CA-8760-7FF1A134ED53}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D264E2A9-7D1F-4F9C-8448-6D76685D1046}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D264E2A9-7D1F-4F9C-8448-6D76685D1046}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D264E2A9-7D1F-4F9C-8448-6D76685D1046}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D264E2A9-7D1F-4F9C-8448-6D76685D1046}.Release|Any CPU.Build.0 = Release|Any CPU
+		{32EF2894-8AB5-4734-B3AA-3509B6ED7FE8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{32EF2894-8AB5-4734-B3AA-3509B6ED7FE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{32EF2894-8AB5-4734-B3AA-3509B6ED7FE8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{32EF2894-8AB5-4734-B3AA-3509B6ED7FE8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{03A7E086-368D-4784-8D13-1C4105222111} = {77874F95-117C-45D0-B379-847F6A86A606}
-		{D575EBEF-E8EA-40DA-B5E5-B9929968088D} = {77874F95-117C-45D0-B379-847F6A86A606}
-		{92ED5EEA-A997-45A3-9774-EC1630284C66} = {77874F95-117C-45D0-B379-847F6A86A606}
-		{806098F6-76D8-4A3C-A457-865F3528C78B} = {77874F95-117C-45D0-B379-847F6A86A606}
-		{34F0882D-F5ED-4BB2-88DF-23FE6E3BF432} = {9A0F7CA5-A6D6-40C0-ADA4-B3F18BEB1A31}
-		{7E34AE40-A69E-45CA-8760-7FF1A134ED53} = {9A0F7CA5-A6D6-40C0-ADA4-B3F18BEB1A31}
+		{D264E2A9-7D1F-4F9C-8448-6D76685D1046} = {D10ADE68-00D8-46A5-8B9E-015946C4B625}
+		{32EF2894-8AB5-4734-B3AA-3509B6ED7FE8} = {1875AED6-13EB-4078-8A0E-612742D125A7}
 	EndGlobalSection
 EndGlobal
