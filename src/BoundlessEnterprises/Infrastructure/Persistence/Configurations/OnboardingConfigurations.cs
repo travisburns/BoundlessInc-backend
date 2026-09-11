@@ -33,6 +33,7 @@ public sealed class OnboardingStepConfiguration : IEntityTypeConfiguration<Onboa
 
         builder.Property(s => s.Name).HasMaxLength(200).IsRequired();
         builder.Property(s => s.Description).HasMaxLength(1000);
+        builder.Property(s => s.Kind).HasConversion<string>().HasMaxLength(40);
     }
 }
 
@@ -66,6 +67,8 @@ public sealed class OnboardingEmployeeStepConfiguration : IEntityTypeConfigurati
         builder.HasKey(s => s.Id);
 
         builder.Property(s => s.Name).HasMaxLength(200).IsRequired();
+        builder.Property(s => s.Kind).HasConversion<string>().HasMaxLength(40);
+        builder.Property(s => s.ResponseJson);
     }
 }
 

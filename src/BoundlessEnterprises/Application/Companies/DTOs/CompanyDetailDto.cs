@@ -25,6 +25,7 @@ public record CompanyDetailDto
     public string? ContactPhone { get; init; }
     public bool SupportsEmployeeLogin { get; init; }
     public bool SupportsPayments { get; init; }
+    public int SortOrder { get; init; }
 
     public static CompanyDetailDto FromEntity(Company c) => new()
     {
@@ -45,5 +46,6 @@ public record CompanyDetailDto
         ContactPhone = c.ContactPhone,
         SupportsEmployeeLogin = c.SupportsEmployeeLogin,
         SupportsPayments = c.SupportsPayments,
+        SortOrder = c.SortOrder,
     };
 }

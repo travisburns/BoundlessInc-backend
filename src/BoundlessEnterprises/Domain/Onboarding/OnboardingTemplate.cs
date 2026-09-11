@@ -40,13 +40,17 @@ public class OnboardingTemplate : AuditableEntity
     }
 
     /// <summary>Appends a step; order is assigned automatically.</summary>
-    public OnboardingStep AddStep(string name, string? description = null, bool isRequired = true)
+    public OnboardingStep AddStep(
+        string name,
+        string? description = null,
+        bool isRequired = true,
+        OnboardingStepKind kind = OnboardingStepKind.Generic)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Step name is required.", nameof(name));
 
         var order = _steps.Count == 0 ? 1 : _steps.Max(s => s.Order) + 1;
-        var step = new OnboardingStep(Id, order, name.Trim(), description, isRequired);
+        var step = new OnboardingStep(Id, order, name.Trim(), description, isRequired, kind);
         _steps.Add(step);
         return step;
     }

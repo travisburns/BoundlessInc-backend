@@ -8,6 +8,7 @@ public record OnboardingStepDto
     public string Name { get; init; } = string.Empty;
     public string? Description { get; init; }
     public bool IsRequired { get; init; }
+    public string Kind { get; init; } = nameof(OnboardingStepKind.Generic);
 }
 
 public record OnboardingTemplateDto
@@ -32,6 +33,7 @@ public record OnboardingTemplateDto
             Name = s.Name,
             Description = s.Description,
             IsRequired = s.IsRequired,
+            Kind = s.Kind.ToString(),
         }).ToList(),
     };
 }
@@ -44,6 +46,9 @@ public record OnboardingEmployeeStepDto
     public bool IsRequired { get; init; }
     public bool IsCompleted { get; init; }
     public DateTime? CompletedAtUtc { get; init; }
+    public string Kind { get; init; } = nameof(OnboardingStepKind.Generic);
+    /// <summary>The data the hire submitted for this step, as a JSON string (null until submitted).</summary>
+    public string? ResponseJson { get; init; }
 }
 
 public record OnboardingProcessDto
@@ -78,6 +83,8 @@ public record OnboardingProcessDto
             IsRequired = s.IsRequired,
             IsCompleted = s.IsCompleted,
             CompletedAtUtc = s.CompletedAtUtc,
+            Kind = s.Kind.ToString(),
+            ResponseJson = s.ResponseJson,
         }).ToList(),
     };
 }

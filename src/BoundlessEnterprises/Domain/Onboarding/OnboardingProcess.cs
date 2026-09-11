@@ -49,17 +49,17 @@ public class OnboardingProcess : AuditableEntity
 
         var process = new OnboardingProcess(template.CompanyId, employeeId, template.Id, template.Name);
         foreach (var step in template.Steps)
-            process._steps.Add(new OnboardingEmployeeStep(process.Id, step.Order, step.Name, step.IsRequired));
+            process._steps.Add(new OnboardingEmployeeStep(process.Id, step.Order, step.Name, step.IsRequired, step.Kind));
 
         process.Recalculate();
         return process;
     }
 
-    public void CompleteStep(Guid employeeStepId, DateTime whenUtc)
+    public void CompleteStep(Guid employeeStepId, DateTime whenUtc, string? responseJson = null)
     {
         var step = _steps.FirstOrDefault(s => s.Id == employeeStepId)
             ?? throw new InvalidOperationException("Step not found in this process.");
-        step.Complete(whenUtc);
+        step.Complete(whenUtc, responseJson);
         Recalculate();
     }
 
