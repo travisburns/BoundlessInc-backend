@@ -1,5 +1,6 @@
 using BoundlessEnterprises.Application.Common.Interfaces;
 using BoundlessEnterprises.Application.Integrations.Services;
+using BoundlessEnterprises.Application.Onboarding.Services;
 using BoundlessEnterprises.Domain.Companies;
 using BoundlessEnterprises.Domain.Documents;
 using BoundlessEnterprises.Domain.Identity;
@@ -39,6 +40,7 @@ public sealed class ApplicationDbSeeder
         await SeedRolesAndPermissionsAsync(cancellationToken);
         await SeedPlatformAdminAsync(cancellationToken);
         await SeedOnboardingTemplatesAsync(cancellationToken);
+        await SeedOnboardingInvitationsAsync(cancellationToken);
         await SeedBillingAsync(cancellationToken);
         await SeedDocumentsAsync(cancellationToken);
         await SeedIntelligenceAsync(cancellationToken);
@@ -245,6 +247,34 @@ public sealed class ApplicationDbSeeder
             await _db.SaveChangesAsync(cancellationToken);
             _logger.LogInformation("Seeded {Count} onboarding templates.", added);
         }
+    }
+
+    /// <summary>
+    /// Seeds one demo self-serve invitation with a fixed, well-known code so the
+    /// public onboarding wizard can be tried immediately without first creating
+    /// an invite through the portal.
+    /// </summary>
+    private async Task SeedOnboardingInvitationsAsync(CancellationToken cancellationToken)
+    {
+        const string demoCode = "ONB-DEMO-2025";
+        var demoHash = InviteCodes.Hash(demoCode);
+
+        if (await _db.OnboardingInvitations.AnyAsync(i => i.CodeHash == demoHash, cancellationToken))
+            return;
+
+        var template = await _db.OnboardingTemplates
+            .FirstOrDefaultAsync(t => t.Name == "Firefin — Kitchen Employee", cancellationToken);
+        if (template is null)
+            return;
+
+        var invitation = OnboardingInvitation.Create(
+            template.CompanyId, template.Id, "new.hire@firefin.example",
+            "Sam", "Rivera", "Kitchen Team Member", demoHash,
+            DateTime.UtcNow.AddDays(30));
+
+        _db.OnboardingInvitations.Add(invitation);
+        await _db.SaveChangesAsync(cancellationToken);
+        _logger.LogInformation("Seeded demo onboarding invitation (code {Code}).", demoCode);
     }
 
     private async Task SeedBillingAsync(CancellationToken cancellationToken)

@@ -68,3 +68,22 @@ public sealed class OnboardingEmployeeStepConfiguration : IEntityTypeConfigurati
         builder.Property(s => s.Name).HasMaxLength(200).IsRequired();
     }
 }
+
+public sealed class OnboardingInvitationConfiguration : IEntityTypeConfiguration<OnboardingInvitation>
+{
+    public void Configure(EntityTypeBuilder<OnboardingInvitation> builder)
+    {
+        builder.ToTable("Invitations", "onboarding");
+        builder.HasKey(i => i.Id);
+
+        builder.Property(i => i.Email).HasMaxLength(256).IsRequired();
+        builder.Property(i => i.FirstName).HasMaxLength(100).IsRequired();
+        builder.Property(i => i.LastName).HasMaxLength(100).IsRequired();
+        builder.Property(i => i.Title).HasMaxLength(150).IsRequired();
+        builder.Property(i => i.CodeHash).HasMaxLength(100).IsRequired();
+        builder.Property(i => i.Status).HasConversion<string>().HasMaxLength(20);
+
+        builder.HasIndex(i => i.CompanyId);
+        builder.HasIndex(i => i.CodeHash).IsUnique();
+    }
+}
