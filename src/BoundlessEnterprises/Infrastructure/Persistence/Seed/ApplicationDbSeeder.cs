@@ -41,6 +41,7 @@ public sealed class ApplicationDbSeeder
         await SeedRolesAndPermissionsAsync(cancellationToken);
         await SeedPlatformAdminAsync(cancellationToken);
         await SeedOnboardingTemplatesAsync(cancellationToken);
+        await RetireLegacyTemplatesAsync(cancellationToken);
         await SeedOnboardingInvitationsAsync(cancellationToken);
         await SeedBillingAsync(cancellationToken);
         await SeedDocumentsAsync(cancellationToken);
@@ -339,6 +340,29 @@ public sealed class ApplicationDbSeeder
 
         if (added > 0)
             await _db.SaveChangesAsync(cancellationToken);
+    }
+
+    // Early checkbox-only templates, superseded by the tailored form-based ones.
+    private static readonly string[] LegacyTemplateNames =
+    {
+        "Firefin — Kitchen Employee",
+        "Boundless — Creative Employee",
+    };
+
+    /// <summary>Deactivates superseded templates so they drop out of the picker without losing history.</summary>
+    private async Task RetireLegacyTemplatesAsync(CancellationToken cancellationToken)
+    {
+        var legacy = await _db.OnboardingTemplates
+            .Where(t => LegacyTemplateNames.Contains(t.Name) && t.IsActive)
+            .ToListAsync(cancellationToken);
+
+        if (legacy.Count == 0) return;
+
+        foreach (var t in legacy)
+            t.Deactivate();
+
+        await _db.SaveChangesAsync(cancellationToken);
+        _logger.LogInformation("Retired {Count} legacy onboarding templates.", legacy.Count);
     }
 
     private static StepDef Step(string name, OnboardingStepKind kind, bool required = true) => new(name, kind, required);
