@@ -27,7 +27,7 @@ public class GetTemplatesHandler : IRequestHandler<GetTemplatesQuery, IReadOnlyL
         var templates = await _db.OnboardingTemplates
             .AsNoTracking()
             .Include(t => t.Steps)
-            .Where(t => t.CompanyId == request.CompanyId)
+            .Where(t => t.CompanyId == request.CompanyId && t.IsActive)
             .OrderBy(t => t.Name)
             .ToListAsync(cancellationToken);
 
