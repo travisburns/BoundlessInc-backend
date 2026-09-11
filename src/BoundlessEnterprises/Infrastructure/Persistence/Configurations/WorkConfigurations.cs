@@ -80,3 +80,28 @@ public sealed class AssignmentUpdateConfiguration : IEntityTypeConfiguration<Ass
         builder.Property(u => u.Body).HasMaxLength(4000).IsRequired();
     }
 }
+
+public sealed class RingEventConfiguration : IEntityTypeConfiguration<RingEvent>
+{
+    public void Configure(EntityTypeBuilder<RingEvent> builder)
+    {
+        builder.ToTable("RingEvents", "work");
+        builder.HasKey(e => e.Id);
+        builder.Property(e => e.Title).HasMaxLength(200).IsRequired();
+        builder.Property(e => e.TimeLabel).HasMaxLength(60);
+        builder.Property(e => e.Detail).HasMaxLength(200);
+        builder.HasIndex(e => e.RingId);
+    }
+}
+
+public sealed class RingActivityConfiguration : IEntityTypeConfiguration<RingActivity>
+{
+    public void Configure(EntityTypeBuilder<RingActivity> builder)
+    {
+        builder.ToTable("RingActivities", "work");
+        builder.HasKey(a => a.Id);
+        builder.Property(a => a.Kind).HasConversion<string>().HasMaxLength(20);
+        builder.Property(a => a.Text).HasMaxLength(500).IsRequired();
+        builder.HasIndex(a => a.RingId);
+    }
+}

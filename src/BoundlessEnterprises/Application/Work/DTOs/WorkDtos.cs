@@ -79,6 +79,33 @@ public record AssignmentUpdateDto
     public DateTime CreatedAtUtc { get; init; }
 }
 
+public record RingEventDto
+{
+    public Guid Id { get; init; }
+    public string Title { get; init; } = string.Empty;
+    public DateOnly Date { get; init; }
+    public string? TimeLabel { get; init; }
+    public string? Detail { get; init; }
+
+    public static RingEventDto FromEntity(RingEvent e) => new()
+    {
+        Id = e.Id, Title = e.Title, Date = e.Date, TimeLabel = e.TimeLabel, Detail = e.Detail,
+    };
+}
+
+public record RingActivityDto
+{
+    public Guid Id { get; init; }
+    public string Kind { get; init; } = string.Empty;
+    public string Text { get; init; } = string.Empty;
+    public DateTime CreatedAtUtc { get; init; }
+
+    public static RingActivityDto FromEntity(RingActivity a) => new()
+    {
+        Id = a.Id, Kind = a.Kind.ToString(), Text = a.Text, CreatedAtUtc = a.CreatedAtUtc,
+    };
+}
+
 public record AssignmentSummaryDto
 {
     public Guid Id { get; init; }
