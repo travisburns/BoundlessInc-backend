@@ -307,17 +307,23 @@ public sealed class ApplicationDbSeeder
     /// </summary>
     private async Task SeedOnboardingInvitationsAsync(CancellationToken cancellationToken)
     {
-        var templatesByCompany = await _db.OnboardingTemplates
-            .ToDictionaryAsync(t => t.CompanyId, t => t, cancellationToken);
         var companyIdByCode = await _db.Companies
             .Where(c => DemoInvites.Select(d => d.CompanyCode).Contains(c.Code))
             .ToDictionaryAsync(c => c.Code, c => c.Id, cancellationToken);
+
+        // A company may have more than one template (e.g. an older seed plus the
+        // tailored one), so match each demo to its specific template by name.
+        var templateNameByCode = OnboardingByCompany.ToDictionary(o => o.CompanyCode, o => o.TemplateName);
 
         var added = 0;
         foreach (var demo in DemoInvites)
         {
             if (!companyIdByCode.TryGetValue(demo.CompanyCode, out var companyId)) continue;
-            if (!templatesByCompany.TryGetValue(companyId, out var template)) continue;
+            if (!templateNameByCode.TryGetValue(demo.CompanyCode, out var templateName)) continue;
+
+            var template = await _db.OnboardingTemplates
+                .FirstOrDefaultAsync(t => t.CompanyId == companyId && t.Name == templateName, cancellationToken);
+            if (template is null) continue;
 
             var hash = InviteCodes.Hash(demo.Code);
             if (await _db.OnboardingInvitations.AnyAsync(i => i.CodeHash == hash, cancellationToken))
