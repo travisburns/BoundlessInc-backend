@@ -1,5 +1,6 @@
 using BoundlessEnterprises.Application.Onboarding.Commands.SetInviteStep;
 using BoundlessEnterprises.Application.Onboarding.Commands.StartFromInvite;
+using BoundlessEnterprises.Application.Onboarding.Commands.SubmitRequest;
 using BoundlessEnterprises.Application.Onboarding.Queries.GetInviteByCode;
 using MediatR;
 
@@ -14,9 +15,22 @@ public sealed class PublicOnboardingEndpoints : IEndpointModule
 {
     public record StartRequest(string? FirstName, string? LastName);
     public record SetStepRequest(bool Completed, string? ResponseJson);
+    public record OnboardRequestBody(Guid CompanyId, string FirstName, string LastName, string Email, string? DesiredRole);
 
     public void MapEndpoints(IEndpointRouteBuilder app)
     {
+        // Public: request to onboard (an admin reviews and approves).
+        app.MapPost("/api/onboarding/requests", async (OnboardRequestBody body, ISender sender, CancellationToken ct) =>
+        {
+            var dto = await sender.Send(new SubmitOnboardingRequestCommand(
+                body.CompanyId, body.FirstName, body.LastName, body.Email, body.DesiredRole), ct);
+            return Results.Accepted($"/api/onboarding/requests/{dto.Id}", dto);
+        })
+            .AllowAnonymous()
+            .WithTags("Onboarding (self-serve)")
+            .WithName("SubmitOnboardingRequest")
+            .WithSummary("Request to onboard into a company (creates a pending request).");
+
         var group = app.MapGroup("/api/onboarding/invite")
             .WithTags("Onboarding (self-serve)")
             .AllowAnonymous();

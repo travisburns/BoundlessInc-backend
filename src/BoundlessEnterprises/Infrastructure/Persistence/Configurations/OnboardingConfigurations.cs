@@ -90,3 +90,21 @@ public sealed class OnboardingInvitationConfiguration : IEntityTypeConfiguration
         builder.HasIndex(i => i.CodeHash).IsUnique();
     }
 }
+
+public sealed class OnboardingRequestConfiguration : IEntityTypeConfiguration<OnboardingRequest>
+{
+    public void Configure(EntityTypeBuilder<OnboardingRequest> builder)
+    {
+        builder.ToTable("Requests", "onboarding");
+        builder.HasKey(r => r.Id);
+
+        builder.Property(r => r.Email).HasMaxLength(256).IsRequired();
+        builder.Property(r => r.FirstName).HasMaxLength(100).IsRequired();
+        builder.Property(r => r.LastName).HasMaxLength(100).IsRequired();
+        builder.Property(r => r.DesiredRole).HasMaxLength(150);
+        builder.Property(r => r.Status).HasConversion<string>().HasMaxLength(20);
+
+        builder.HasIndex(r => r.CompanyId);
+        builder.HasIndex(r => r.Status);
+    }
+}
