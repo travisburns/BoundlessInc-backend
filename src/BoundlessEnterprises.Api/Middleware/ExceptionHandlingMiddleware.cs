@@ -55,6 +55,10 @@ public sealed class ExceptionHandlingMiddleware
                 StatusCodes.Status403Forbidden,
                 fa.Message,
                 new ProblemDetails { Status = StatusCodes.Status403Forbidden, Title = fa.Message }),
+            ConflictException c => (
+                StatusCodes.Status409Conflict,
+                c.Message,
+                new ProblemDetails { Status = StatusCodes.Status409Conflict, Title = c.Message }),
             _ => (
                 StatusCodes.Status500InternalServerError,
                 "An unexpected error occurred.",

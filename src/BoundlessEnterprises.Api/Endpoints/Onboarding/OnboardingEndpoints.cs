@@ -1,3 +1,4 @@
+using BoundlessEnterprises.Application.Onboarding.Commands.CreateInvitation;
 using BoundlessEnterprises.Application.Onboarding.Commands.SetStepCompletion;
 using BoundlessEnterprises.Application.Onboarding.Commands.StartOnboarding;
 using BoundlessEnterprises.Application.Onboarding.Queries.GetProcesses;
@@ -11,6 +12,8 @@ public sealed class OnboardingEndpoints : IEndpointModule
 {
     public record StartOnboardingRequest(Guid EmployeeId, Guid TemplateId);
     public record SetStepRequest(bool Completed);
+    public record CreateInvitationRequest(
+        Guid TemplateId, string Email, string FirstName, string LastName, string? Title, int? ExpiresInDays);
 
     public void MapEndpoints(IEndpointRouteBuilder app)
     {
@@ -42,5 +45,15 @@ public sealed class OnboardingEndpoints : IEndpointModule
                     new SetStepCompletionCommand(companyId, processId, stepId, body.Completed), ct)))
             .WithName("SetOnboardingStep")
             .WithSummary("Mark an onboarding step complete or reopen it.");
+
+        group.MapPost("/invitations", async (Guid companyId, CreateInvitationRequest body, ISender sender, CancellationToken ct) =>
+        {
+            var dto = await sender.Send(new CreateInvitationCommand(
+                companyId, body.TemplateId, body.Email, body.FirstName, body.LastName,
+                body.Title, body.ExpiresInDays ?? 14), ct);
+            return Results.Created($"/api/companies/{companyId}/onboarding/invitations/{dto.Id}", dto);
+        })
+            .WithName("CreateOnboardingInvitation")
+            .WithSummary("Create a self-serve onboarding invitation for a new hire (returns the code once).");
     }
 }

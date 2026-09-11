@@ -34,6 +34,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Employment> Employments => Set<Employment>();
     public DbSet<OnboardingTemplate> OnboardingTemplates => Set<OnboardingTemplate>();
     public DbSet<OnboardingProcess> OnboardingProcesses => Set<OnboardingProcess>();
+    public DbSet<OnboardingInvitation> OnboardingInvitations => Set<OnboardingInvitation>();
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Invoice> Invoices => Set<Invoice>();
     public DbSet<Payment> Payments => Set<Payment>();
