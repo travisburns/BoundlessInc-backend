@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.Mvc;
 using BoundlessEnterprises.Application.Work.Queries.GetAssignment;
 using BoundlessEnterprises.Application.Work.Queries.GetAssignments;
 using BoundlessEnterprises.Application.Work.Queries.GetMyRing;
+using BoundlessEnterprises.Application.Work.Queries.GetMyRings;
 using BoundlessEnterprises.Application.Work.Queries.GetRingActivity;
 using BoundlessEnterprises.Application.Work.Queries.GetRingByDomain;
 using BoundlessEnterprises.Application.Work.Queries.GetRingEvents;
@@ -72,6 +73,10 @@ public sealed class WorkEndpoints : IEndpointModule
             var ring = await sender.Send(new GetMyRingQuery(), ct);
             return ring is null ? Results.NoContent() : Results.Ok(ring);
         }).WithName("GetMyRing").WithSummary("The ring held by the current user, if any.");
+
+        rings.MapGet("/held", async (ISender sender, CancellationToken ct) =>
+            Results.Ok(await sender.Send(new GetMyRingsQuery(), ct)))
+            .WithName("GetMyRings").WithSummary("All rings held by the current user.");
 
         rings.MapGet("/{slug}", async (string slug, ISender sender, CancellationToken ct) =>
             Results.Ok(await sender.Send(new GetRingByDomainQuery(slug), ct)))
