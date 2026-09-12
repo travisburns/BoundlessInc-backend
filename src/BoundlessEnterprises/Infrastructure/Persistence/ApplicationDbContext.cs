@@ -8,6 +8,7 @@ using BoundlessEnterprises.Domain.Identity;
 using BoundlessEnterprises.Domain.Integrations;
 using BoundlessEnterprises.Domain.Intelligence;
 using BoundlessEnterprises.Domain.Onboarding;
+using BoundlessEnterprises.Domain.Onboarding.Core;
 using BoundlessEnterprises.Domain.Payments;
 using BoundlessEnterprises.Domain.Work;
 using Microsoft.EntityFrameworkCore;
@@ -37,6 +38,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<OnboardingProcess> OnboardingProcesses => Set<OnboardingProcess>();
     public DbSet<OnboardingInvitation> OnboardingInvitations => Set<OnboardingInvitation>();
     public DbSet<OnboardingRequest> OnboardingRequests => Set<OnboardingRequest>();
+    public DbSet<CoreOnboardingProgress> CoreOnboardingProgresses => Set<CoreOnboardingProgress>();
+    public DbSet<CoreOnboardingStageSignature> CoreOnboardingStageSignatures => Set<CoreOnboardingStageSignature>();
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Invoice> Invoices => Set<Invoice>();
     public DbSet<Payment> Payments => Set<Payment>();

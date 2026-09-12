@@ -5,6 +5,7 @@ using BoundlessEnterprises.Domain.Identity;
 using BoundlessEnterprises.Domain.Integrations;
 using BoundlessEnterprises.Domain.Intelligence;
 using BoundlessEnterprises.Domain.Onboarding;
+using BoundlessEnterprises.Domain.Onboarding.Core;
 using BoundlessEnterprises.Domain.Payments;
 using BoundlessEnterprises.Domain.Work;
 using Microsoft.EntityFrameworkCore;
@@ -29,6 +30,8 @@ public interface IApplicationDbContext
     DbSet<OnboardingProcess> OnboardingProcesses { get; }
     DbSet<OnboardingInvitation> OnboardingInvitations { get; }
     DbSet<OnboardingRequest> OnboardingRequests { get; }
+    DbSet<CoreOnboardingProgress> CoreOnboardingProgresses { get; }
+    DbSet<CoreOnboardingStageSignature> CoreOnboardingStageSignatures { get; }
     DbSet<Customer> Customers { get; }
     DbSet<Invoice> Invoices { get; }
     DbSet<Payment> Payments { get; }
